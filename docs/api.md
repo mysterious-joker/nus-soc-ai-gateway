@@ -1,5 +1,9 @@
 # Local API
 
+**Start with the [interactive local API reference](http://localhost:4000/reference)** while your gateway is running. It includes copyable cURL examples, required fields, sample responses and provider restrictions. Open **API reference** in the dashboard header if you use a custom port.
+
+Download the [OpenAPI 3.1 contract](../public/openapi.json) for API clients and code-generation tools, or fetch `/openapi.json` from your running gateway. This is the client inference contract; dashboard management routes are intentionally outside its scope. The realtime operation documents the WebSocket handshake and example events, not a complete WebSocket event schema.
+
 Base URL: `http://localhost:4000/v1`. These are your gateway's client-facing routes, not separately configured provider developer APIs. Compatibility covers the endpoints below, not the entire OpenAI API.
 
 ## Authentication and model selection

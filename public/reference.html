@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>API reference · NUS SoC AI Gateway</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/reference.css" />
+    <script src="/reference.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#reference-main">Skip to API reference</a>
+    <div class="shell">
+      <header class="header">
+        <a class="brand" href="/">NUS SoC AI Gateway</a>
+        <div class="header-actions">
+          <a href="/">Dashboard</a>
+          <a href="/openapi.json" download="nus-soc-ai-gateway.openapi.json"
+            >Download OpenAPI</a
+          >
+        </div>
+      </header>
+      <div class="reference-layout">
+        <aside class="reference-nav">
+          <nav aria-label="API reference sections">
+            <a href="#start">Get started</a>
+            <a href="#compatibility">Provider compatibility</a>
+            <div id="endpoint-nav"></div>
+            <a href="#errors">Errors and limits</a>
+          </nav>
+        </aside>
+        <main id="reference-main">
+          <section id="start" class="reference-intro">
+            <h1>Connect your app.</h1>
+            <p class="reference-lead">
+              One local API for your connected school AI sources. Start with an
+              app key, find a verified model, then send a request.
+            </p>
+            <ol class="start-steps">
+              <li>
+                <strong>Create an app key.</strong> In
+                <a href="/">Sources → App API keys</a>, create a key for your
+                app. This is separate from the dashboard token.
+              </li>
+              <li>
+                <strong>Set your base URL.</strong> Use
+                <code id="client-base">http://localhost:4000/v1</code> in
+                compatible clients. Keep the gateway running.
+              </li>
+              <li>
+                <strong>Choose a verified model.</strong> Call
+                <code>GET /v1/models</code> and copy an ID whose
+                <code>endpoints</code> include the route you need. An empty list
+                means you need to connect and verify a source first.
+              </li>
+            </ol>
+            <div class="reference-code" id="setup-example"></div>
+            <p class="muted">
+              Examples use placeholders, not your credentials. Copy them into
+              your local terminal and replace the key and model ID. Requests
+              consume the selected source’s allowance.
+            </p>
+          </section>
+          <section id="compatibility" class="reference-section">
+            <h2>Choose the right source</h2>
+            <dl class="provider-notes">
+              <div>
+                <dt>ChatGPT Edu</dt>
+                <dd>
+                  Chat, Responses, images and realtime audio through the OAuth
+                  bridge, where verified.
+                </dd>
+              </div>
+              <div>
+                <dt>Gemini Enterprise</dt>
+                <dd>
+                  Text chat and Responses through your CLI session. No tool
+                  calls, image/audio input, sampling controls or token-limit
+                  parameters.
+                </dd>
+              </div>
+              <div>
+                <dt>SoCLaaS</dt>
+                <dd>
+                  Chat, Responses, embeddings and transcription according to the
+                  discovered model’s capabilities.
+                </dd>
+              </div>
+            </dl>
+            <p class="muted">
+              Every endpoint below still needs a verified model. Provider
+              credits remain separate. This is the gateway’s supported API, not
+              the entire OpenAI API.
+            </p>
+          </section>
+          <p id="reference-status" role="status">Loading API contract…</p>
+          <div id="endpoint-reference"></div>
+          <section id="errors" class="reference-section">
+            <h2>Understand an error</h2>
+            <p>
+              HTTP failures return
+              <code>{"error":{"message":"…","type":"…"}}</code>. Streaming can
+              start with HTTP 200 and fail later: inspect error events before
+              treating a request as successful.
+            </p>
+            <dl class="error-notes">
+              <div>
+                <dt>400 / 415</dt>
+                <dd>
+                  Check required fields, Content-Type and provider-specific
+                  restrictions.
+                </dd>
+              </div>
+              <div>
+                <dt>401</dt>
+                <dd>
+                  Use a valid app key in the Bearer header. The dashboard token
+                  is not an app key.
+                </dd>
+              </div>
+              <div>
+                <dt>403 / 404</dt>
+                <dd>
+                  Choose a verified model and endpoint from the catalog.
+                  Cross-origin browser access is blocked.
+                </dd>
+              </div>
+              <div>
+                <dt>413</dt>
+                <dd>
+                  Reduce your upload. JSON is limited to 2 MiB; multipart and
+                  JSON image edits to 26 MiB.
+                </dd>
+              </div>
+              <div>
+                <dt>429</dt>
+                <dd>
+                  Wait for quota or concurrency to reset. Gemini serves one
+                  request at a time.
+                </dd>
+              </div>
+              <div>
+                <dt>500 / 502 / 503 / 504</dt>
+                <dd>
+                  Check the source connection and refresh the catalog. The
+                  upstream may be unavailable or have timed out.
+                </dd>
+              </div>
+            </dl>
+            <p class="muted">
+              Up to 16 active requests/sessions. Most HTTP inference times out
+              after two minutes; images after five minutes. Realtime sessions
+              last up to 15 minutes. Uploads stay in memory; usage logs do not
+              store prompts or replies.
+            </p>
+          </section>
+          <footer class="reference-footer">
+            Need machine-readable schemas?
+            <a href="/openapi.json" download="nus-soc-ai-gateway.openapi.json"
+              >Download the OpenAPI 3.1 contract</a
+            >
+            for an API client or code-generation tool. The realtime entry
+            documents its handshake; WebSocket events are described separately.
+          </footer>
+        </main>
+      </div>
+    </div>
+    <noscript
+      ><p class="shell">
+        JavaScript is required to render endpoint details.
+        <a href="/openapi.json">Open the JSON contract</a> or read the
+        <a
+          href="https://github.com/mysterious-joker/nus-soc-ai-gateway/blob/main/docs/api.md"
+          >written API guide</a
+        >.
+      </p></noscript
+    >
+  </body>
+</html>

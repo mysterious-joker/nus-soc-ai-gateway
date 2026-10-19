@@ -1,0 +1,1615 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "NUS SoC AI Gateway \u2014 client API",
+    "version": "2.0.0",
+    "description": "Local app API contract. Use your gateway app key, not the dashboard token or a provider credential. Availability comes from GET /v1/models. Documentation describes the common input forms and connector-specific restrictions; it does not imply full OpenAI API compatibility.",
+    "license": {
+      "name": "MIT",
+      "url": "https://github.com/mysterious-joker/nus-soc-ai-gateway/blob/main/LICENSE"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:{port}",
+      "description": "Your local gateway",
+      "variables": {
+        "port": {
+          "default": "4000"
+        }
+      }
+    }
+  ],
+  "security": [
+    {
+      "GatewayKey": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Common"
+    },
+    {
+      "name": "ChatGPT Edu"
+    },
+    {
+      "name": "SoCLaaS"
+    }
+  ],
+  "paths": {
+    "/v1/models": {
+      "get": {
+        "operationId": "listModels",
+        "summary": "Find a usable model",
+        "description": "Returns only models with successful endpoint checks for the current account. Empty data means no verified models are available yet. Discover and verify candidates in the dashboard before using them. Counts include aliases and reasoning variants.",
+        "tags": ["Common"],
+        "x-providers": ["ChatGPT Edu", "Gemini Enterprise", "SoCLaaS"],
+        "responses": {
+          "200": {
+            "description": "Successful result. Examples are illustrative; IDs, usage and data vary by account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelList"
+                },
+                "example": {
+                  "object": "list",
+                  "data": [
+                    {
+                      "id": "PROVIDER/MODEL_FROM_YOUR_CATALOG",
+                      "object": "model",
+                      "owned_by": "chatgpt",
+                      "type": "llm",
+                      "endpoints": ["/v1/chat/completions"],
+                      "discovery": "account-catalog",
+                      "verification": {
+                        "status": "passed"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Http400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "413": {
+            "$ref": "#/components/responses/Http413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Http415"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          },
+          "502": {
+            "$ref": "#/components/responses/Http502"
+          },
+          "503": {
+            "$ref": "#/components/responses/Http503"
+          },
+          "504": {
+            "$ref": "#/components/responses/Http504"
+          }
+        }
+      }
+    },
+    "/v1/chat/completions": {
+      "post": {
+        "operationId": "chatCompletion",
+        "summary": "Chat with a model",
+        "description": "Choose a model that advertises this endpoint. Additional request fields are forwarded to ChatGPT/SoCLaaS and may be rejected upstream. Gemini accepts text only; it rejects tools, image/audio input, sampling controls and token limits. Inspect streamed errors even when HTTP status is 200.",
+        "tags": ["Common"],
+        "x-providers": ["ChatGPT Edu", "Gemini Enterprise", "SoCLaaS"],
+        "responses": {
+          "200": {
+            "description": "Successful result. Examples are illustrative; IDs, usage and data vary by account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                },
+                "example": {
+                  "id": "chatcmpl_example",
+                  "object": "chat.completion",
+                  "model": "PROVIDER/MODEL_FROM_YOUR_CATALOG",
+                  "choices": [
+                    {
+                      "index": 0,
+                      "message": {
+                        "role": "assistant",
+                        "content": "Vector search finds similar items by comparing embeddings."
+                      },
+                      "finish_reason": "stop"
+                    }
+                  ],
+                  "usage": {
+                    "prompt_tokens": 12,
+                    "completion_tokens": 10,
+                    "total_tokens": 22
+                  }
+                }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "data: {\"choices\":[{\"delta\":{\"content\":\"OK\"},\"index\":0}]}\n\ndata: [DONE]\n\n"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Http400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "413": {
+            "$ref": "#/components/responses/Http413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Http415"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          },
+          "502": {
+            "$ref": "#/components/responses/Http502"
+          },
+          "503": {
+            "$ref": "#/components/responses/Http503"
+          },
+          "504": {
+            "$ref": "#/components/responses/Http504"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              },
+              "example": {
+                "model": "PROVIDER/MODEL_FROM_YOUR_CATALOG",
+                "messages": [
+                  {
+                    "role": "user",
+                    "content": "Explain vector search briefly."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/responses": {
+      "post": {
+        "operationId": "createResponse",
+        "summary": "Generate a response",
+        "description": "Choose a model that advertises this endpoint. Additional request fields are forwarded to ChatGPT/SoCLaaS and may be rejected upstream. Gemini accepts text only; it rejects tools, image/audio input, sampling controls and token limits. Inspect streamed errors even when HTTP status is 200. Conversation persistence, response retrieval and deletion routes are not implemented.",
+        "tags": ["Common"],
+        "x-providers": ["ChatGPT Edu", "Gemini Enterprise", "SoCLaaS"],
+        "responses": {
+          "200": {
+            "description": "Successful result. Examples are illustrative; IDs, usage and data vary by account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponsesResponse"
+                },
+                "example": {
+                  "id": "resp_example",
+                  "object": "response",
+                  "status": "completed",
+                  "model": "PROVIDER/MODEL_FROM_YOUR_CATALOG",
+                  "output": [
+                    {
+                      "type": "message",
+                      "role": "assistant",
+                      "content": [
+                        {
+                          "type": "output_text",
+                          "text": "Vector search finds similar items by comparing embeddings."
+                        }
+                      ]
+                    }
+                  ],
+                  "usage": {
+                    "input_tokens": 12,
+                    "output_tokens": 10,
+                    "total_tokens": 22
+                  }
+                }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "event: response.output_text.delta\ndata: {\"type\":\"response.output_text.delta\",\"delta\":\"OK\"}\n\nevent: response.completed\ndata: {\"type\":\"response.completed\",\"response\":{\"status\":\"completed\"}}\n\n"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Http400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "413": {
+            "$ref": "#/components/responses/Http413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Http415"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          },
+          "502": {
+            "$ref": "#/components/responses/Http502"
+          },
+          "503": {
+            "$ref": "#/components/responses/Http503"
+          },
+          "504": {
+            "$ref": "#/components/responses/Http504"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponsesRequest"
+              },
+              "example": {
+                "model": "PROVIDER/MODEL_FROM_YOUR_CATALOG",
+                "input": "Explain vector search briefly."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/embeddings": {
+      "post": {
+        "operationId": "createEmbedding",
+        "summary": "Create text embeddings",
+        "description": "Use an embedding model returned by SoCLaaS. Vector dimensions depend on the selected model. The example vector is shortened.",
+        "tags": ["SoCLaaS"],
+        "x-providers": ["SoCLaaS"],
+        "responses": {
+          "200": {
+            "description": "Successful result. Examples are illustrative; IDs, usage and data vary by account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmbeddingResponse"
+                },
+                "example": {
+                  "object": "list",
+                  "model": "PROVIDER/MODEL_FROM_YOUR_CATALOG",
+                  "data": [
+                    {
+                      "object": "embedding",
+                      "index": 0,
+                      "embedding": [0.12, -0.03, 0.08]
+                    }
+                  ],
+                  "usage": {
+                    "prompt_tokens": 6,
+                    "total_tokens": 6
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Http400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "413": {
+            "$ref": "#/components/responses/Http413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Http415"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          },
+          "502": {
+            "$ref": "#/components/responses/Http502"
+          },
+          "503": {
+            "$ref": "#/components/responses/Http503"
+          },
+          "504": {
+            "$ref": "#/components/responses/Http504"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmbeddingRequest"
+              },
+              "example": {
+                "model": "PROVIDER/MODEL_FROM_YOUR_CATALOG",
+                "input": "A short passage to index."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/images/generations": {
+      "post": {
+        "operationId": "generateImage",
+        "summary": "Generate an image",
+        "description": "Use a verified image-generation model. This consumes allowance. Size, quality and count support vary upstream. HTTP timeout: five minutes.",
+        "tags": ["ChatGPT Edu"],
+        "x-providers": ["ChatGPT Edu"],
+        "responses": {
+          "200": {
+            "description": "Successful result. Examples are illustrative; IDs, usage and data vary by account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageResponse"
+                },
+                "example": {
+                  "created": 1700000000,
+                  "data": [
+                    {
+                      "b64_json": "BASE64_IMAGE_DATA"
+                    }
+                  ]
+                }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "description": "Provider-specific image event stream when stream=true."
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Http400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "413": {
+            "$ref": "#/components/responses/Http413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Http415"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          },
+          "502": {
+            "$ref": "#/components/responses/Http502"
+          },
+          "503": {
+            "$ref": "#/components/responses/Http503"
+          },
+          "504": {
+            "$ref": "#/components/responses/Http504"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImageRequest"
+              },
+              "example": {
+                "model": "PROVIDER/MODEL_FROM_YOUR_CATALOG",
+                "prompt": "A blue circle on a white background.",
+                "n": 1,
+                "quality": "low",
+                "size": "1024x1024"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/images/edits": {
+      "post": {
+        "operationId": "editImage",
+        "summary": "Edit an image",
+        "description": "Upload image or image[] files with the edit prompt. Multipart and JSON edit bodies are limited to 26 MiB. JSON image references are bridge-specific; multipart is the documented portable form. HTTP timeout: five minutes.",
+        "tags": ["ChatGPT Edu"],
+        "x-providers": ["ChatGPT Edu"],
+        "responses": {
+          "200": {
+            "description": "Successful result. Examples are illustrative; IDs, usage and data vary by account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageResponse"
+                },
+                "example": {
+                  "data": [
+                    {
+                      "b64_json": "BASE64_EDITED_IMAGE_DATA"
+                    }
+                  ]
+                }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Http400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "413": {
+            "$ref": "#/components/responses/Http413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Http415"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          },
+          "502": {
+            "$ref": "#/components/responses/Http502"
+          },
+          "503": {
+            "$ref": "#/components/responses/Http503"
+          },
+          "504": {
+            "$ref": "#/components/responses/Http504"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ImageEditRequest"
+              },
+              "example": {
+                "model": "PROVIDER/MODEL_FROM_YOUR_CATALOG",
+                "prompt": "Make the circle green.",
+                "image": "@image.png",
+                "quality": "low"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImageEditJson"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/audio/transcriptions": {
+      "post": {
+        "operationId": "transcribeAudio",
+        "summary": "Transcribe an audio file",
+        "description": "Upload exactly one nonempty file. Maximum multipart body: 26 MiB including overhead. Supported formats/options depend on SoCLaaS. Token usage may be unavailable.",
+        "tags": ["SoCLaaS"],
+        "x-providers": ["SoCLaaS"],
+        "responses": {
+          "200": {
+            "description": "Successful result. Examples are illustrative; IDs, usage and data vary by account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptionResponse"
+                },
+                "example": {
+                  "text": "The gateway is ready."
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "The gateway is ready."
+              },
+              "text/vtt": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "The gateway is ready."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Http400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "413": {
+            "$ref": "#/components/responses/Http413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Http415"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          },
+          "502": {
+            "$ref": "#/components/responses/Http502"
+          },
+          "503": {
+            "$ref": "#/components/responses/Http503"
+          },
+          "504": {
+            "$ref": "#/components/responses/Http504"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/TranscriptionRequest"
+              },
+              "example": {
+                "model": "PROVIDER/MODEL_FROM_YOUR_CATALOG",
+                "file": "@sample.wav",
+                "response_format": "json"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/audio/speech": {
+      "post": {
+        "operationId": "synthesizeSpeech",
+        "summary": "Read text aloud",
+        "description": "Uses the ChatGPT OAuth realtime connection. Returns mono 24 kHz, 16-bit audio. Maximum 4,000 nonblank characters; generation timeout is 60 seconds after initialization.",
+        "tags": ["ChatGPT Edu"],
+        "x-providers": ["ChatGPT Edu"],
+        "responses": {
+          "200": {
+            "description": "Successful result. Examples are illustrative; IDs, usage and data vary by account.",
+            "content": {
+              "audio/wav": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "audio/pcm": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Http400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "413": {
+            "$ref": "#/components/responses/Http413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Http415"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          },
+          "502": {
+            "$ref": "#/components/responses/Http502"
+          },
+          "503": {
+            "$ref": "#/components/responses/Http503"
+          },
+          "504": {
+            "$ref": "#/components/responses/Http504"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpeechRequest"
+              },
+              "example": {
+                "model": "PROVIDER/MODEL_FROM_YOUR_CATALOG",
+                "input": "The gateway is ready.",
+                "response_format": "wav"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/realtime": {
+      "get": {
+        "operationId": "openRealtime",
+        "summary": "Open a realtime audio session",
+        "description": "WebSocket handshake, not an ordinary GET. Use ws://localhost:4000/v1/realtime?model=URL_ENCODED_ID with an Authorization Bearer header. JSON events are relayed; model changes and binary frames are rejected. Maximum session: 15 minutes; frame/buffer limit: 16 MiB. Revoking a key blocks new connections, not an existing session. Native browser WebSocket constructors cannot set the required header.",
+        "tags": ["ChatGPT Edu"],
+        "x-providers": ["ChatGPT Edu"],
+        "parameters": [
+          {
+            "name": "model",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Exact ID from GET /v1/models advertising this endpoint. Never guess an ID.",
+              "examples": ["PROVIDER/MODEL_FROM_YOUR_CATALOG"]
+            }
+          }
+        ],
+        "responses": {
+          "101": {
+            "description": "Switching protocols. Wait for session.created, then send JSON realtime events."
+          },
+          "400": {
+            "$ref": "#/components/responses/Http400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Http401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Http403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Http404"
+          },
+          "413": {
+            "$ref": "#/components/responses/Http413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Http415"
+          },
+          "429": {
+            "$ref": "#/components/responses/Http429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Http500"
+          },
+          "502": {
+            "$ref": "#/components/responses/Http502"
+          },
+          "503": {
+            "$ref": "#/components/responses/Http503"
+          },
+          "504": {
+            "$ref": "#/components/responses/Http504"
+          }
+        },
+        "x-websocket": {
+          "sendExample": {
+            "type": "response.create",
+            "response": {
+              "output_modalities": ["text"],
+              "instructions": "Reply with OK."
+            }
+          },
+          "receiveExample": {
+            "type": "response.output_text.delta",
+            "delta": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "GatewayKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "App API key created under Sources \u2192 App API keys. Inference access only."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "description": "Human-readable explanation."
+              },
+              "type": {
+                "type": "string",
+                "description": "authentication_error or gateway_error."
+              }
+            },
+            "required": ["message", "type"],
+            "additionalProperties": true
+          }
+        },
+        "required": ["error"],
+        "additionalProperties": true
+      },
+      "Model": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact ID from GET /v1/models advertising this endpoint. Never guess an ID.",
+            "examples": ["PROVIDER/MODEL_FROM_YOUR_CATALOG"]
+          },
+          "object": {
+            "type": "string",
+            "const": "model"
+          },
+          "owned_by": {
+            "type": "string",
+            "enum": ["chatgpt", "gemini", "soclaas"]
+          },
+          "type": {
+            "type": "string",
+            "description": "Task classification, such as llm, embedding or realtime-audio."
+          },
+          "context_window": {
+            "type": ["integer", "null"]
+          },
+          "endpoints": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Successfully verified route for this account."
+            }
+          },
+          "discovery": {
+            "type": "string",
+            "description": "account-catalog, bridge-candidate or service-session."
+          },
+          "verification": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "description": "Latest check status."
+              },
+              "checkedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "endpoints": {
+                "type": "object",
+                "description": "Per-endpoint status and timestamp."
+              }
+            },
+            "required": [],
+            "additionalProperties": true
+          }
+        },
+        "required": ["id", "object", "owned_by", "type", "endpoints"],
+        "additionalProperties": true
+      },
+      "ModelList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "list"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Model"
+            }
+          }
+        },
+        "required": ["object", "data"],
+        "additionalProperties": true
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["system", "developer", "user", "assistant", "tool"]
+          },
+          "content": {
+            "description": "Text is supported by all connectors. Arrays, null and tool messages depend on the provider; Gemini accepts text only.",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": ["role", "content"],
+        "additionalProperties": true
+      },
+      "ChatRequest": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact ID from GET /v1/models advertising this endpoint. Never guess an ID.",
+            "examples": ["PROVIDER/MODEL_FROM_YOUR_CATALOG"]
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            },
+            "minItems": 1
+          },
+          "stream": {
+            "type": "boolean",
+            "default": false,
+            "description": "Return Server-Sent Events instead of one JSON response."
+          },
+          "stream_options": {
+            "type": "object",
+            "properties": {
+              "include_usage": {
+                "type": "boolean"
+              }
+            },
+            "required": [],
+            "additionalProperties": true
+          }
+        },
+        "required": ["model", "messages"],
+        "additionalProperties": true
+      },
+      "ChatResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Completion ID."
+          },
+          "object": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact ID from GET /v1/models advertising this endpoint. Never guess an ID.",
+            "examples": ["PROVIDER/MODEL_FROM_YOUR_CATALOG"]
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "integer"
+                },
+                "message": {
+                  "$ref": "#/components/schemas/Message"
+                },
+                "finish_reason": {
+                  "type": ["string", "null"]
+                }
+              },
+              "required": [],
+              "additionalProperties": true
+            }
+          },
+          "usage": {
+            "type": ["object", "null"],
+            "properties": {
+              "prompt_tokens": {
+                "type": "integer"
+              },
+              "completion_tokens": {
+                "type": "integer"
+              },
+              "total_tokens": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "required": ["choices"],
+        "additionalProperties": true
+      },
+      "ResponsesRequest": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact ID from GET /v1/models advertising this endpoint. Never guess an ID.",
+            "examples": ["PROVIDER/MODEL_FROM_YOUR_CATALOG"]
+          },
+          "input": {
+            "description": "Text, or structured input items supported by the connector.",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              }
+            ]
+          },
+          "instructions": {
+            "type": "string",
+            "description": "Optional instructions. Gemini serializes these with the conversation."
+          },
+          "stream": {
+            "type": "boolean",
+            "default": false,
+            "description": "Return Server-Sent Events instead of one JSON response."
+          },
+          "stream_options": {
+            "type": "object",
+            "properties": {
+              "include_usage": {
+                "type": "boolean"
+              }
+            },
+            "required": [],
+            "additionalProperties": true
+          }
+        },
+        "required": ["model", "input"],
+        "additionalProperties": true
+      },
+      "ResponsesResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Response ID."
+          },
+          "object": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "description": "Response status; inspect for failed or incomplete results."
+          },
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact ID from GET /v1/models advertising this endpoint. Never guess an ID.",
+            "examples": ["PROVIDER/MODEL_FROM_YOUR_CATALOG"]
+          },
+          "output": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Output item type."
+                },
+                "role": {
+                  "type": "string",
+                  "description": "Usually assistant."
+                },
+                "content": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "description": "Content type, such as output_text."
+                      },
+                      "text": {
+                        "type": "string",
+                        "description": "Generated text."
+                      }
+                    },
+                    "required": [],
+                    "additionalProperties": true
+                  }
+                }
+              },
+              "required": [],
+              "additionalProperties": true
+            }
+          },
+          "usage": {
+            "type": ["object", "null"],
+            "properties": {
+              "input_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "output_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "total_tokens": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [],
+            "additionalProperties": true
+          }
+        },
+        "required": ["output"],
+        "additionalProperties": true
+      },
+      "EmbeddingRequest": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact ID from GET /v1/models advertising this endpoint. Never guess an ID.",
+            "examples": ["PROVIDER/MODEL_FROM_YOUR_CATALOG"]
+          },
+          "input": {
+            "description": "Text or text array. Other provider-specific forms are not part of this documented contract.",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        },
+        "required": ["model", "input"],
+        "additionalProperties": true
+      },
+      "EmbeddingResponse": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact ID from GET /v1/models advertising this endpoint. Never guess an ID.",
+            "examples": ["PROVIDER/MODEL_FROM_YOUR_CATALOG"]
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "object": {
+                  "type": "string"
+                },
+                "index": {
+                  "type": "integer"
+                },
+                "embedding": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "required": ["embedding"],
+              "additionalProperties": true
+            }
+          },
+          "usage": {
+            "type": "object",
+            "properties": {
+              "prompt_tokens": {
+                "type": "integer"
+              },
+              "total_tokens": {
+                "type": "integer"
+              }
+            },
+            "required": [],
+            "additionalProperties": true
+          }
+        },
+        "required": ["data"],
+        "additionalProperties": true
+      },
+      "ImageRequest": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact ID from GET /v1/models advertising this endpoint. Never guess an ID.",
+            "examples": ["PROVIDER/MODEL_FROM_YOUR_CATALOG"]
+          },
+          "prompt": {
+            "type": "string",
+            "description": "Describe the image to generate."
+          },
+          "n": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Number of images; allowed values depend on the provider."
+          },
+          "size": {
+            "type": "string",
+            "description": "Provider-supported dimensions, for example 1024x1024."
+          },
+          "quality": {
+            "type": "string",
+            "description": "Provider-supported quality, for example low."
+          },
+          "stream": {
+            "type": "boolean",
+            "default": false,
+            "description": "Return Server-Sent Events instead of one JSON response."
+          }
+        },
+        "required": ["model", "prompt"],
+        "additionalProperties": true
+      },
+      "ImageEditRequest": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact ID from GET /v1/models advertising this endpoint. Never guess an ID.",
+            "examples": ["PROVIDER/MODEL_FROM_YOUR_CATALOG"]
+          },
+          "prompt": {
+            "type": "string",
+            "description": "Describe the requested edit."
+          },
+          "image": {
+            "type": "string",
+            "format": "binary",
+            "description": "Nonempty image file. For multiple files use the image[] field."
+          },
+          "image[]": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "mask": {
+            "type": "string",
+            "format": "binary",
+            "description": "Optional mask accepted by the provider."
+          },
+          "quality": {
+            "type": "string",
+            "description": "Provider-supported quality."
+          },
+          "stream": {
+            "type": "boolean",
+            "default": false,
+            "description": "Return Server-Sent Events instead of one JSON response."
+          }
+        },
+        "required": ["model", "prompt"],
+        "additionalProperties": true,
+        "anyOf": [
+          {
+            "required": ["image"]
+          },
+          {
+            "required": ["image[]"]
+          }
+        ]
+      },
+      "ImageEditJson": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact ID from GET /v1/models advertising this endpoint. Never guess an ID.",
+            "examples": ["PROVIDER/MODEL_FROM_YOUR_CATALOG"]
+          },
+          "prompt": {
+            "type": "string",
+            "description": "Describe the edit."
+          }
+        },
+        "required": ["model", "prompt"],
+        "additionalProperties": true
+      },
+      "ImageResponse": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "b64_json": {
+                  "type": "string",
+                  "description": "Base64 image data when returned."
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "Image URL when returned."
+                },
+                "revised_prompt": {
+                  "type": "string",
+                  "description": "Provider-revised prompt, if available."
+                }
+              },
+              "required": [],
+              "additionalProperties": true
+            }
+          },
+          "usage": {
+            "type": ["object", "null"]
+          }
+        },
+        "required": ["data"],
+        "additionalProperties": true
+      },
+      "TranscriptionRequest": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact ID from GET /v1/models advertising this endpoint. Never guess an ID.",
+            "examples": ["PROVIDER/MODEL_FROM_YOUR_CATALOG"]
+          },
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "Exactly one nonempty audio file."
+          },
+          "language": {
+            "type": "string",
+            "description": "Optional provider-supported language code."
+          },
+          "prompt": {
+            "type": "string",
+            "description": "Optional transcription context."
+          },
+          "response_format": {
+            "type": "string",
+            "enum": ["json", "verbose_json", "text", "srt", "vtt"],
+            "default": "json"
+          }
+        },
+        "required": ["model", "file"],
+        "additionalProperties": true
+      },
+      "TranscriptionResponse": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Recognized speech. Other fields depend on response_format and provider."
+          }
+        },
+        "required": ["text"],
+        "additionalProperties": true
+      },
+      "SpeechRequest": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact ID from GET /v1/models advertising this endpoint. Never guess an ID.",
+            "examples": ["PROVIDER/MODEL_FROM_YOUR_CATALOG"]
+          },
+          "input": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000,
+            "description": "Nonblank text to read aloud."
+          },
+          "voice": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{1,50}$",
+            "description": "Optional voice accepted by the upstream service."
+          },
+          "response_format": {
+            "type": "string",
+            "enum": ["wav", "pcm"],
+            "default": "wav"
+          },
+          "stream": {
+            "type": "boolean",
+            "const": false,
+            "description": "Streaming is not supported here. Use the realtime WebSocket route."
+          }
+        },
+        "required": ["model", "input"],
+        "additionalProperties": false
+      }
+    },
+    "responses": {
+      "Http400": {
+        "description": "Invalid input or unsupported connector parameter.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "message": "Invalid input or unsupported connector parameter.",
+                "type": "gateway_error"
+              }
+            }
+          }
+        }
+      },
+      "Http401": {
+        "description": "Missing, invalid or revoked local app key.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "message": "Missing, invalid or revoked local app key.",
+                "type": "authentication_error"
+              }
+            }
+          }
+        }
+      },
+      "Http403": {
+        "description": "Origin, authorization or verification check failed.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "message": "Origin, authorization or verification check failed.",
+                "type": "gateway_error"
+              }
+            }
+          }
+        }
+      },
+      "Http404": {
+        "description": "Model or route not found.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "message": "Model or route not found.",
+                "type": "gateway_error"
+              }
+            }
+          }
+        }
+      },
+      "Http413": {
+        "description": "Request body too large.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "message": "Request body too large.",
+                "type": "gateway_error"
+              }
+            }
+          }
+        }
+      },
+      "Http415": {
+        "description": "Incorrect Content-Type.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "message": "Incorrect Content-Type.",
+                "type": "gateway_error"
+              }
+            }
+          }
+        }
+      },
+      "Http429": {
+        "description": "Provider quota or gateway concurrency limit reached.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "message": "Provider quota or gateway concurrency limit reached.",
+                "type": "gateway_error"
+              }
+            }
+          }
+        }
+      },
+      "Http500": {
+        "description": "Unexpected gateway error.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "message": "Unexpected gateway error.",
+                "type": "gateway_error"
+              }
+            }
+          }
+        }
+      },
+      "Http502": {
+        "description": "Provider connection or response failure.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "message": "Provider connection or response failure.",
+                "type": "gateway_error"
+              }
+            }
+          }
+        }
+      },
+      "Http503": {
+        "description": "Source unavailable, catalog stale or included allowance unknown.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "message": "Source unavailable, catalog stale or included allowance unknown.",
+                "type": "gateway_error"
+              }
+            }
+          }
+        }
+      },
+      "Http504": {
+        "description": "Request timed out.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "message": "Request timed out.",
+                "type": "gateway_error"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

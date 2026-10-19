@@ -74,6 +74,11 @@ function createGateway(options = {}) {
     "/app.js": ["app.js", "text/javascript"],
     "/styles.css": ["styles.css", "text/css"],
     "/favicon.svg": ["favicon.svg", "image/svg+xml"],
+    "/reference": ["reference.html", "text/html"],
+    "/reference.html": ["reference.html", "text/html"],
+    "/reference.js": ["reference.js", "text/javascript"],
+    "/reference.css": ["reference.css", "text/css"],
+    "/openapi.json": ["openapi.json", "application/json"],
   };
   let activeRequests = 0;
   let initialized = false;

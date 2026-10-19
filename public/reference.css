@@ -1,0 +1,194 @@
+.reference-layout {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 48px;
+  padding: 40px 0 64px;
+}
+.reference-nav nav {
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+.reference-nav a {
+  display: block;
+  padding: 9px 0;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.reference-nav a:hover {
+  color: var(--text);
+}
+.reference-layout main {
+  min-width: 0;
+}
+.reference-intro h1 {
+  font-size: clamp(2rem, 4vw, 2.8rem);
+}
+.reference-lead {
+  font-size: 1.1rem;
+  margin-top: 16px;
+  color: var(--muted);
+}
+.start-steps {
+  padding-left: 22px;
+  margin: 28px 0;
+}
+.start-steps li + li {
+  margin-top: 16px;
+}
+.reference-section {
+  padding-top: 40px;
+  margin-top: 40px;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 24px;
+}
+.reference-section h2 {
+  font-size: 1.5rem;
+  margin: 0 0 14px;
+}
+.reference-section h3 {
+  margin: 26px 0 12px;
+}
+.reference-section p + p {
+  margin-top: 14px;
+}
+.reference-route {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.reference-method {
+  color: var(--success);
+  font-weight: 650;
+}
+.reference-route code {
+  font-size: 0.95rem;
+}
+.reference-providers {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 14px 0;
+}
+.reference-code {
+  margin: 16px 0 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.reference-code-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--surface);
+}
+.reference-code-head span {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.reference-code pre {
+  padding: 18px;
+  margin: 0;
+  max-height: 420px;
+  overflow: auto;
+  white-space: pre;
+  overflow-wrap: normal;
+}
+.reference-code button {
+  min-height: 36px;
+  padding: 4px 12px;
+}
+.reference-fields {
+  margin: 0;
+}
+.reference-fields > div,
+.provider-notes > div,
+.error-notes > div {
+  display: grid;
+  grid-template-columns: minmax(110px, 1fr) minmax(0, 3fr);
+  gap: 20px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--line);
+}
+.reference-fields dt {
+  overflow-wrap: anywhere;
+}
+.reference-fields dd,
+.provider-notes dd,
+.error-notes dd {
+  margin: 0;
+  color: var(--muted);
+}
+.reference-required {
+  display: block;
+  color: var(--accent);
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+.reference-fields small {
+  display: block;
+  margin-bottom: 6px;
+}
+.reference-section details {
+  margin: 18px 0;
+}
+.reference-section summary {
+  cursor: pointer;
+  padding: 10px 0;
+}
+.reference-footer {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+#reference-status {
+  margin-top: 32px;
+}
+@media (max-width: 760px) {
+  .reference-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    padding-top: 24px;
+  }
+  .reference-nav nav {
+    position: static;
+    max-height: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+  }
+  #endpoint-nav {
+    display: contents;
+  }
+  .reference-nav a {
+    padding: 8px 0;
+  }
+  .reference-section {
+    padding-top: 28px;
+    margin-top: 28px;
+  }
+  .reference-fields > div,
+  .provider-notes > div,
+  .error-notes > div {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .reference-required {
+    display: inline;
+    margin-left: 10px;
+  }
+  .header {
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .header-actions {
+    flex-wrap: wrap;
+  }
+}

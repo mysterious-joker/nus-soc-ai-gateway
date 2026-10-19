@@ -81,6 +81,8 @@ Credentials, databases, local reports and generated media stay in ignored direct
 
 ## Documentation
 
+- [User-friendly API reference](http://localhost:4000/reference) — served by your running gateway; also linked from its header.
+- [Download the OpenAPI contract](public/openapi.json) — request/response schemas, authentication and errors.
 - [Setup and troubleshooting](docs/setup.md)
 - [API usage and compatibility](docs/api.md)
 - [Discovery, verification and quotas](docs/verification.md)

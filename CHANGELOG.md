@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- User-friendly local API reference with copyable requests, response examples, required fields and provider restrictions.
+- Downloadable OpenAPI 3.1 client contract with CI validation and route coverage checks.
+
 ## 2.0.0 — 2026-10-19
 
 Initial public release as **NUS SoC AI Gateway**.

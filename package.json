@@ -29,6 +29,7 @@
     "url": "https://github.com/mysterious-joker/nus-soc-ai-gateway/issues"
   },
   "devDependencies": {
+    "@apidevtools/swagger-parser": "13.1.0",
     "prettier": "3.9.10"
   }
 }
