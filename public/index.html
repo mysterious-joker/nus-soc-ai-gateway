@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>NUS SoC AI Gateway</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="shell">
+      <header class="header">
+        <a class="brand" href="/" aria-label="NUS SoC AI Gateway home"
+          ><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true">
+            <path
+              d="M7 8h9l11 18M7 26h9L27 8"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+            />
+            <circle cx="7" cy="8" r="3" fill="currentColor" />
+            <circle cx="7" cy="26" r="3" fill="currentColor" /></svg
+          ><span
+            >NUS SoC AI Gateway<small
+              >SoC AI packages &amp; SoCLaaS</small
+            ></span
+          ></a
+        >
+        <div class="header-actions">
+          <span id="gateway-status" class="muted">Local access only</span
+          ><button id="lock" class="quiet" hidden>Lock dashboard</button>
+        </div>
+      </header>
+      <div id="notice" class="notice" role="alert" hidden></div>
+      <main id="main">
+        <section id="unlock" class="unlock" aria-labelledby="unlock-title">
+          <h1 id="unlock-title">Your AI sources, one gateway.</h1>
+          <p>
+            Connect your NUS accounts, discover available models, and keep track
+            of usage from one place.
+          </p>
+          <form id="unlock-form">
+            <label for="dashboard-token">Dashboard token</label
+            ><input
+              id="dashboard-token"
+              type="password"
+              autocomplete="current-password"
+              required
+              placeholder="Paste your local dashboard token"
+            /><button class="primary" type="submit">Unlock dashboard</button>
+          </form>
+          <p class="muted">
+            On this Mac, run <code>npm run open</code> to open an authenticated
+            dashboard. You can also find the token in
+            <code>data/dashboard-token</code>.
+          </p>
+          <p class="muted small">
+            Your dashboard token is separate from the API keys you give to apps.
+          </p>
+        </section>
+        <div id="workspace" hidden>
+          <nav class="tabs" role="tablist" aria-label="Gateway views">
+            <button
+              id="tab-sources"
+              role="tab"
+              aria-selected="true"
+              aria-controls="sources"
+              data-view="sources"
+            >
+              Sources</button
+            ><button
+              id="tab-models"
+              role="tab"
+              aria-selected="false"
+              aria-controls="models"
+              tabindex="-1"
+              data-view="models"
+            >
+              Models <span id="model-count" class="count">0</span></button
+            ><button
+              id="tab-usage"
+              role="tab"
+              aria-selected="false"
+              aria-controls="usage"
+              tabindex="-1"
+              data-view="usage"
+            >
+              Usage</button
+            ><button
+              id="tab-playground"
+              role="tab"
+              aria-selected="false"
+              aria-controls="playground"
+              tabindex="-1"
+              data-view="playground"
+            >
+              Playground
+            </button>
+          </nav>
+          <section id="sources" role="tabpanel" aria-labelledby="tab-sources">
+            <div class="section-heading">
+              <div>
+                <h1>Connected sources</h1>
+                <p class="muted">Institutional accounts. One local API.</p>
+              </div>
+              <button id="refresh">Refresh sources</button>
+            </div>
+            <div id="source-list" class="source-list" aria-live="polite">
+              <p class="empty">Loading your sources…</p>
+            </div>
+            <p class="small muted">
+              Provider quotas are separate from gateway token usage. Account
+              access depends on your institution’s enabled services; an email
+              domain alone does not confirm a subscription.
+            </p>
+            <div class="endpoint">
+              <div>
+                <span class="muted small">API base URL</span
+                ><code id="base-url"></code>
+              </div>
+              <button id="copy-url" class="quiet">Copy URL</button>
+            </div>
+            <details class="keys">
+              <summary>
+                App API keys
+                <span class="muted small"
+                  >Connect your tools to the gateway</span
+                >
+              </summary>
+              <div class="details-body">
+                <p class="muted">
+                  Keys grant inference access only. New keys are shown once.
+                </p>
+                <form id="key-form" class="inline-form">
+                  <div>
+                    <label for="key-name">Key name</label
+                    ><input
+                      id="key-name"
+                      required
+                      maxlength="80"
+                      placeholder="e.g. Coursework notebook"
+                    />
+                  </div>
+                  <button type="submit">Create key</button>
+                </form>
+                <div id="new-key" class="new-key" hidden>
+                  <label for="new-key-value">Copy this key before closing</label
+                  ><input id="new-key-value" readonly autocomplete="off" />
+                  <div class="button-row">
+                    <button id="copy-key">Copy key</button
+                    ><button id="hide-key" class="quiet">Done</button>
+                  </div>
+                </div>
+                <div id="key-list"></div>
+              </div>
+            </details>
+          </section>
+          <section
+            id="models"
+            role="tabpanel"
+            aria-labelledby="tab-models"
+            hidden
+          >
+            <div class="section-heading">
+              <div>
+                <h1>Model catalog</h1>
+                <p class="muted">
+                  Models with successful request checks for your connected
+                  accounts.
+                </p>
+              </div>
+            </div>
+            <div class="filters">
+              <div class="search">
+                <label for="model-search">Search models</label
+                ><input
+                  id="model-search"
+                  type="search"
+                  placeholder="Search model name or ID"
+                />
+              </div>
+              <div>
+                <label for="provider-filter">Source</label
+                ><select id="provider-filter">
+                  <option value="all">All sources</option>
+                  <option value="chatgpt">ChatGPT Edu</option>
+                  <option value="gemini">Gemini Enterprise</option>
+                  <option value="soclaas">SoCLaaS</option>
+                </select>
+              </div>
+              <div>
+                <label for="type-filter">Capability</label
+                ><select id="type-filter">
+                  <option value="all">All capabilities</option>
+                </select>
+              </div>
+            </div>
+            <label
+              ><input type="checkbox" id="show-excluded" /> Show excluded and
+              untested entries</label
+            >
+            <p id="catalog-summary" class="muted small"></p>
+            <details class="request-details">
+              <summary>Capability coverage</summary>
+              <div id="coverage-list" class="table-scroll"></div>
+              <p class="small muted">
+                No separately billed API fallback is configured. Web-app
+                features are available here only when a connected service
+                exposes them. A successful request confirms access at that time,
+                not unlimited or permanent availability.
+              </p>
+            </details>
+            <div id="model-list"></div>
+          </section>
+          <section
+            id="usage"
+            role="tabpanel"
+            aria-labelledby="tab-usage"
+            hidden
+          >
+            <div class="section-heading">
+              <div>
+                <h1>Gateway usage</h1>
+                <p class="muted">
+                  Requests sent through this gateway, across every source.
+                </p>
+              </div>
+              <div>
+                <label class="sr-only" for="timeframe">Time period</label
+                ><select id="timeframe">
+                  <option value="all">All time</option>
+                  <option value="7d">Last 7 days</option>
+                  <option value="24h">Last 24 hours</option>
+                </select>
+              </div>
+            </div>
+            <div id="usage-summary" class="usage-summary"></div>
+            <p id="usage-note" class="muted small"></p>
+            <h2>Tokens by model</h2>
+            <div id="usage-models" class="table-scroll"></div>
+            <details class="request-details">
+              <summary>Recent requests</summary>
+              <div id="request-list" class="table-scroll"></div>
+            </details>
+          </section>
+          <section
+            id="playground"
+            role="tabpanel"
+            aria-labelledby="tab-playground"
+            hidden
+          >
+            <div class="section-heading">
+              <div>
+                <h1>Try a model</h1>
+                <p class="muted">
+                  Send a request with your connected account. Provider quota
+                  applies.
+                </p>
+              </div>
+            </div>
+            <form id="playground-form">
+              <div class="playground-grid">
+                <div>
+                  <label for="playground-model">Model</label
+                  ><select id="playground-model" required></select>
+                  <p id="playground-endpoint" class="small muted"></p>
+                  <div id="upload-field" hidden>
+                    <label id="upload-label" for="media-file">File</label>
+                    <input id="media-file" type="file" />
+                    <p class="small muted">
+                      Up to 25 MiB. Files are forwarded without being saved by
+                      the gateway.
+                    </p>
+                  </div>
+                  <label for="prompt">Input</label
+                  ><textarea
+                    id="prompt"
+                    rows="8"
+                    required
+                    placeholder="Enter a prompt or text to embed"
+                  ></textarea
+                  ><button class="primary" id="send" type="submit">
+                    Send request
+                  </button>
+                </div>
+                <div class="response">
+                  <div class="response-heading">
+                    <h2>Response</h2>
+                    <span id="response-meta" class="small muted"></span>
+                  </div>
+                  <pre id="response-output" tabindex="0">
+Choose a model and send your first request.</pre>
+                  <div id="response-media"></div>
+                </div>
+              </div>
+            </form>
+            <details class="request-details">
+              <summary>Use this model in your app</summary>
+              <p class="muted small">
+                Replace YOUR_GATEWAY_KEY with an app API key from Sources.
+              </p>
+              <pre id="code-example" tabindex="0"></pre>
+              <button id="copy-example" class="quiet">Copy example</button>
+            </details>
+          </section>
+        </div>
+      </main>
+      <footer>
+        <span>Private to this Mac</span
+        ><span>Independent local tool · Not an official NUS service</span>
+      </footer>
+    </div>
+    <div id="toast" role="status" class="toast" hidden></div>
+  </body>
+</html>

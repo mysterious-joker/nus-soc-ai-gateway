@@ -1,0 +1,53 @@
+# Architecture and storage
+
+## Runtime
+
+The application is a Node.js HTTP server with a vanilla JavaScript dashboard and SQLite persistence. There is no frontend build step. The only production npm dependency is `ws` for realtime WebSockets. CLIProxyAPI and Antigravity are separately installed subprocesses.
+
+| Component                             | Responsibility                                                                 |
+| ------------------------------------- | ------------------------------------------------------------------------------ |
+| `server.js`                           | Loopback listener, dashboard/API routes, body limits, concurrency and shutdown |
+| `lib/security.js`                     | Dashboard sessions, CSRF, Host/Origin checks, secure file helpers              |
+| `lib/providers.js`                    | Institutional identity validation, provider discovery and quota parsing        |
+| `lib/catalog.js`                      | Refresh state, namespaces, provenance, verification gate and quota checks      |
+| `lib/bridge.js`                       | CLIProxyAPI configuration, staged OAuth, admitted credentials and lifecycle    |
+| `lib/gemini-cli.js`                   | CLI identity/project checks, isolated workspace, hooks and process control     |
+| `lib/proxy.js`, `lib/gemini-proxy.js` | Request translation, forwarding, SSE and usage recording                       |
+| `lib/realtime.js`                     | Session discovery, WebSocket relay and speech synthesis                        |
+| `lib/media.js`                        | Multipart parsing and bounded response reads                                   |
+| `lib/store.js`                        | SQLite settings, hashed app keys, encrypted SoCLaaS key and usage ledger       |
+| `public/`                             | Sources, model catalog, usage views and playground                             |
+| `scripts/`, `test/`                   | Local diagnostics and mocked regression checks                                 |
+
+## Request lifecycle
+
+An app request passes Host/Origin and Bearer-key checks, then resolves a discovered model and verified endpoint for the current account. Stale catalogs cannot route. ChatGPT requests check current reported Codex allowance. The connector sends the request, relays its result, and records status, latency and reported tokens. It does not save the prompt or response in the usage ledger.
+
+Model types describe tasks. Supported transport routes are determined by the connector; advertised client routes are their intersection with successful checks. Discovery can retain an unknown model type without pretending to have an implementation for it.
+
+## Authentication boundaries
+
+- Dashboard tokens become eight-hour HttpOnly, SameSite=Strict cookies. Mutations also require session-specific CSRF.
+- App keys are randomly generated and stored as SHA-256 digests. They grant inference, not management.
+- ChatGPT OAuth runs in staging. Only verified institutional identities enter the bridge's active credential directory; rejected credentials are quarantined.
+- Gemini login stays under CLI/OS-keyring management. Fresh diagnostics must match the pinned email/project before a prompt is sent. API-key/ADC overrides are rejected.
+- The CLI receives an allowlisted environment and runs in a private generated workspace with slash expansion disabled, sandboxing and deny-all tool hooks. It never runs inside the student's application repository.
+
+These protect a personal local deployment. They are not multi-user isolation, a provider entitlement system or an external security certification.
+
+## State
+
+`GATEWAY_DATA_DIR`, defaulting to `data/`, holds the database, dashboard and bridge tokens, encryption key, bridge configuration, verified OAuth files, staging/quarantine directories and CLI workspace. Directories are owner-only; sensitive files use owner read/write permissions.
+
+The SoCLaaS key uses AES-256-GCM with a local encryption key. This protects a database-only disclosure, not access to the entire OS account. OAuth refresh credentials remain readable by their local bridge process. The CLI and provider may retain independent history. Legacy database migration code preserves earlier usage and labels estimated historical counts separately.
+
+`output/` contains private local diagnostics and test fixtures. Neither directory belongs in Git. All public tests use temporary state with fake identities and services.
+
+## Current limits
+
+- Complete subscription integration has been exercised on macOS; provider/CLI changes may break internal response contracts.
+- Gemini is text-only, serializes message history and serves one inference request at a time.
+- No shared credit pool, per-app budget, automatic provider fallback or public hosting support.
+- No age-based verification expiry; inspect check timestamps and re-run live tests when needed.
+- Realtime key revocation affects new connections; existing sessions are bounded to 15 minutes.
+- Gemini website image/music/video services have no connector here.

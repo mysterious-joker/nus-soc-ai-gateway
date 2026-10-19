@@ -1,0 +1,76 @@
+# Local API
+
+Base URL: `http://localhost:4000/v1`. These are your gateway's client-facing routes, not separately configured provider developer APIs. Compatibility covers the endpoints below, not the entire OpenAI API.
+
+## Authentication and model selection
+
+Create an app API key in Sources. Send it in the Bearer header. Query-string keys and cross-origin browser requests are unsupported.
+
+```sh
+export NUS_GATEWAY_KEY='YOUR_LOCAL_GATEWAY_KEY'
+curl http://localhost:4000/v1/models \
+  -H "Authorization: Bearer $NUS_GATEWAY_KEY"
+```
+
+The response is `{ "object": "list", "data": [...] }`. Entries include `id`, `owned_by`, `type`, `endpoints`, `discovery` and timestamped `verification`. Use the exact qualified ID, such as `chatgpt/<returned-id>`. Unqualified IDs work only when unique. `endpoints` lists successful checks for the current account; not every model supports every route.
+
+## Text requests
+
+Set `MODEL` to a real returned ID with the required endpoint:
+
+```sh
+export MODEL='PROVIDER/MODEL_FROM_YOUR_CATALOG'
+curl http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer $NUS_GATEWAY_KEY" \
+  -H 'Content-Type: application/json' \
+  -d "{\"model\":\"$MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"Explain vector search briefly.\"}]}"
+
+curl http://localhost:4000/v1/responses \
+  -H "Authorization: Bearer $NUS_GATEWAY_KEY" \
+  -H 'Content-Type: application/json' \
+  -d "{\"model\":\"$MODEL\",\"input\":\"Explain vector search briefly.\"}"
+```
+
+For streaming, add `"stream": true` and use `curl -N`. Chat Completions emits SSE data chunks ending in `[DONE]`; Responses emits named events. Check error events even when initial HTTP status is 200. Streamed usage depends on upstream support.
+
+Gemini accepts text conversations with `model`, `messages` (chat) or `input`/`instructions` (Responses), `stream` and `stream_options`. It rejects tool calls, image/audio input, sampling controls and output-token limits. Each request starts a new isolated CLI conversation with supplied history serialized as text; this is not native role-message equivalence. Reported tokens include CLI context overhead.
+
+## Routes
+
+| Route                           | Request                                                                               | Connector        |
+| ------------------------------- | ------------------------------------------------------------------------------------- | ---------------- |
+| `POST /v1/chat/completions`     | JSON messages; optional SSE                                                           | All three        |
+| `POST /v1/responses`            | JSON input; optional SSE                                                              | All three        |
+| `POST /v1/embeddings`           | JSON `model`, `input`                                                                 | SoCLaaS          |
+| `POST /v1/images/generations`   | JSON `model`, `prompt`, supported options                                             | ChatGPT bridge   |
+| `POST /v1/images/edits`         | Multipart `model`, `prompt`, `image`, optional mask/options; bridge also accepts JSON | ChatGPT bridge   |
+| `POST /v1/audio/transcriptions` | Multipart `model`, `file`, supported options                                          | SoCLaaS          |
+| `POST /v1/audio/speech`         | JSON `model`, `input`, optional `voice`, `response_format`                            | ChatGPT realtime |
+| `GET /v1/realtime?model=...`    | WebSocket upgrade with Bearer header                                                  | ChatGPT realtime |
+
+A route is usable only when the selected model advertises it. Unknown capabilities are not silently routed to another provider.
+
+### Uploads
+
+```sh
+curl http://localhost:4000/v1/audio/transcriptions \
+  -H "Authorization: Bearer $NUS_GATEWAY_KEY" \
+  -F "model=$MODEL" \
+  -F 'file=@sample.wav'
+```
+
+Transcription supports JSON, verbose JSON, text, SRT and VTT where accepted upstream. Multipart bodies are limited to 26 MiB including overhead. Uploads stay in memory and are not saved to the usage database.
+
+### Speech and realtime
+
+Speech accepts 1–4,000 characters and returns WAV by default, or raw PCM with `response_format: "pcm"`. Both use mono 24 kHz, 16-bit audio. Voices are validated upstream; there is no fixed voice list.
+
+Realtime requires a WebSocket client that can set an Authorization header; native browser WebSocket constructors cannot. JSON events are relayed, the model stays fixed, and client tools are not executed locally. Sessions last at most 15 minutes; frames/buffers are limited to 16 MiB. Revocation blocks new connections; existing sessions may remain until they close or time out. Stop the gateway to end all active sessions immediately.
+
+## Errors and limits
+
+Errors use `{ "error": { "message": "...", "type": "..." } }`. Common statuses: 400 invalid/unsupported input; 401 authentication; 403 authorization or unverified endpoint; 404 unknown model/route; 413 body limit; 429 quota/concurrency; 502 upstream failure; 503 unavailable/stale source; 504 timeout.
+
+There are at most 16 active gateway requests/sessions and one Gemini inference request. HTTP inference generally times out after two minutes, images after five minutes, and speech generation after 60 seconds following initialization. JSON bodies are limited to 2 MiB and ordinary upstream responses to 64 MiB.
+
+Dashboard `/api/*` routes require a dashboard cookie, plus CSRF for mutations. `/api/verify` is the privileged candidate-testing path. App keys cannot bypass verification.

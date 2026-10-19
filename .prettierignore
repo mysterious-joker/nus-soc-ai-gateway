@@ -1,0 +1,7 @@
+data/
+output/
+.playwright-cli/
+node_modules/
+package-lock.json
+.agents/
+.codex/

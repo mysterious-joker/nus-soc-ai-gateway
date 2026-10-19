@@ -1,0 +1,22 @@
+data/
+node_modules/
+output/
+.playwright-cli/
+.DS_Store
+*.log
+.env*
+!.env.example
+# Local credentials, databases, diagnostics, and editor state
+*.db
+*.db-*
+*.sqlite*
+*.pem
+*.key
+*.p12
+*.pfx
+.agents/
+.codex/
+.vscode/
+.idea/
+coverage/
+*.tgz
