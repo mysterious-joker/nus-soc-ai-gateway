@@ -17,6 +17,7 @@ const { createGeminiCli } = require("./lib/gemini-cli");
 const { createTools } = require("./lib/tools");
 const { ENDPOINTS } = require("./lib/capabilities");
 const { readBody } = require("./lib/media");
+const { createVerification, loopbackProbe } = require("./lib/verification");
 const {
   discoverRealtime,
   speech,
@@ -31,6 +32,7 @@ function createGateway(options = {}) {
     path.join(__dirname, "data");
   const store = options.store || createStore(dataDir);
   const sessions = createSessions(dataDir);
+  const verification = createVerification();
   const tools = options.tools || createTools({ dataDir });
   const gemini =
     options.gemini ||
@@ -48,6 +50,7 @@ function createGateway(options = {}) {
       store,
       binary: () => tools.resolve("cliproxyapi")?.path,
       onChange: () => {
+        verification.cancel().catch(() => {});
         catalog.invalidate();
         catalog.refresh(true).catch(() => {});
       },
@@ -177,8 +180,12 @@ function createGateway(options = {}) {
       if (route === "/api/session" && method === "GET")
         return json(res, 200, { csrf: sessions.require(req).csrf });
       if (route.startsWith("/api/")) {
-        sessions.require(req, !["GET", "HEAD"].includes(method));
+        const session = sessions.require(
+          req,
+          !["GET", "HEAD"].includes(method),
+        );
         if (route === "/api/session" && method === "DELETE") {
+          await verification.cancel();
           sessions.logout(req, res);
           return json(res, 200, { ok: true });
         }
@@ -193,6 +200,7 @@ function createGateway(options = {}) {
             refreshing: catalog.refreshing,
             sources: catalog.sources(),
             models: catalog.list(),
+            verification: verification.snapshot(),
             analytics: store.analytics(
               url.searchParams.get("timeframe") || "all",
             ),
@@ -204,6 +212,39 @@ function createGateway(options = {}) {
           throw new HttpError(
             503,
             "Gateway is verifying saved accounts. Try again shortly.",
+          );
+        if (route === "/api/verification" && method === "POST") {
+          if (verification.running())
+            throw new HttpError(409, "A full verification is already running.");
+          await catalog.refresh(true);
+          // The dashboard may have been locked while discovery was in flight.
+          sessions.require(req, true);
+          if (stopPromise)
+            throw new HttpError(503, "Gateway is shutting down.");
+          return json(
+            res,
+            202,
+            verification.start(
+              catalog.list(),
+              loopbackProbe(`http://127.0.0.1:${currentPort}`, {
+                Cookie: `nus_gateway=${session.id}`,
+                "X-CSRF-Token": session.csrf,
+              }),
+            ),
+          );
+        }
+        if (route === "/api/verification" && method === "DELETE")
+          return json(res, 200, await verification.cancel());
+        if (
+          verification.running() &&
+          !["GET", "HEAD"].includes(method) &&
+          (route.startsWith("/api/providers/") ||
+            route.startsWith("/api/oauth/") ||
+            route === "/api/tools/bridge")
+        )
+          throw new HttpError(
+            409,
+            "Cancel full verification before changing a source.",
           );
         if (route === "/api/tools/bridge" && method === "POST") {
           await tools.installBridge();
@@ -476,6 +517,7 @@ function createGateway(options = {}) {
       if (stopPromise) return stopPromise;
       stopPromise = (async () => {
         clearInterval(timer);
+        await verification.cancel();
         realtime.stop();
         await bridge.stop();
         gemini.stop();
