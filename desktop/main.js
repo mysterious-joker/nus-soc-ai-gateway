@@ -11,9 +11,10 @@ const smoke = process.argv.includes("--smoke-test");
 if (smoke)
   app.setPath(
     "userData",
-    fs.mkdtempSync(
-      path.join(require("node:os").tmpdir(), "gateway-desktop-smoke-"),
-    ),
+    process.env.GATEWAY_SMOKE_DATA_DIR ||
+      fs.mkdtempSync(
+        path.join(require("node:os").tmpdir(), "gateway-desktop-smoke-"),
+      ),
   );
 let gateway,
   window,
@@ -209,8 +210,6 @@ else {
       .catch(() => {})
       .finally(() => {
         stopped = true;
-        if (smoke)
-          fs.rmSync(app.getPath("userData"), { recursive: true, force: true });
         app.exit(process.exitCode || 0);
       });
   });

@@ -565,7 +565,10 @@ function renderSources() {
           button(
             "Use device code",
             () => startOAuth(source.provider, "device"),
-            { class: "quiet" },
+            {
+              class: "quiet",
+              disabled: dashboard.tools && !dashboard.tools.bridge.installed,
+            },
           ),
         );
       connection.append(actions);

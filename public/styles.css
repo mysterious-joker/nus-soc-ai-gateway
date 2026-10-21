@@ -866,6 +866,11 @@ main {
 .tool-details {
   margin-top: 20px;
 }
+.tool-details .details-body {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+}
 .tool-details summary {
   cursor: pointer;
 }

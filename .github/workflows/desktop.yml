@@ -38,6 +38,7 @@ jobs:
       - run: npm run format:check
       - run: npm test
       - run: npm audit --omit=dev
+      - run: node scripts/check-tools.js
       - if: runner.os != 'Linux'
         run: npm run test:desktop
       # Only the headless CI runner disables Chromium's OS sandbox; release apps keep it enabled.
