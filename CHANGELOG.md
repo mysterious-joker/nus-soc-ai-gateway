@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.3.0 — 2026-10-22
+
+- Added **Connect Gemini**: prepares a checksum-verified official CLI when needed, reuses a saved school session, or opens guided sign-in and connects automatically.
+- Added setup progress, cancellation, timeout, private diagnostic cleanup and protection against simultaneous full verification.
+- Preserved exact school-domain checks, keyring-based subscription authentication, isolated workspace restrictions and rejection of API-key/ADC overrides.
+- Added eight onboarding regression tests, desktop checks for the connection button and official CLI download/startup checks on supported build targets.
+- Updated setup, architecture and third-party documentation. Gemini remains available on macOS/Linux; Windows integration is not enabled.
+
 ## 2.2.1 — 2026-10-21
 
 - Fix invalid Mac bundle signatures that caused the downloaded app to be reported as damaged. Apply ad-hoc signing after packaging; Developer ID signing and notarization remain unavailable.

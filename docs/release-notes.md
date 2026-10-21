@@ -1,27 +1,16 @@
-This update fixes Mac installers that macOS reported as **damaged** because bundle signing was skipped. Version 2.2.1 applies a valid ad-hoc signature and verifies both signature integrity and dashboard startup from the actual DMG before publishing.
+Gemini setup now starts with **Sources → Connect Gemini**.
 
-Quit older gateway instances, replace the app in Applications, then open it. Existing connections and usage are kept. The app is still not Developer ID signed or notarized; macOS may require its normal per-app approval for an unidentified developer.
+- Prepares Google’s official CLI automatically when missing, with a pinned SHA-512-verified download. No Homebrew or shell commands are required.
+- Reuses an existing school login immediately. Otherwise, opens a terminal for Google sign-in and first-run prompts, then connects and discovers models automatically.
+- Shows progress and supports cancellation. Exact `@comp.nus.edu.sg` checks, subscription-session authentication and tool restrictions remain enforced.
+- Keeps the one-click **Models → Verify all models** feature and existing connections, usage history and app keys.
 
-The one-click feature remains in **Models → Verify all models**:
+Saved-login connection was checked through the dashboard on Apple Silicon using the managed CLI: 14 Gemini model entries were discovered without an inference request. New-account consent remains an interactive Google flow; its orchestration is covered by synthetic tests. Fifty regression tests pass locally. Release builds also check desktop startup, the connection controls, verified tool downloads and Mac DMG signatures/startup.
 
-- Checks every supported model/endpoint with short prompts and bundled tiny audio/image inputs. No prompt or file upload is needed.
-- Shows progress and individual results; supports cancellation and dashboard reloads. Unsupported or stale models are reported as skipped.
-- Runs one request at a time without retries and pauses a source after authentication, quota or service-availability errors.
-- Uses a 32-token SoCLaaS text output cap and the lowest advertised ChatGPT reasoning level. CLI services control their own output limits. Media checks also consume allowance.
-- Successful endpoint checks become available to apps immediately. Failed minimal requests may reflect temporary errors or insufficient output budget; they do not establish subscription exclusion.
+Install this update over the existing app, after quitting it, to retain your local data. For your Apple Silicon Mac, choose **nus-soc-ai-gateway-2.3.0-mac-arm64.dmg**. Other assets cover Intel Mac, Linux x64 and Windows x64.
 
-See [verification details](https://github.com/mysterious-joker/nus-soc-ai-gateway/blob/main/docs/verification.md#one-click-full-verification) for exact probe coverage and limits. Automated checks use synthetic providers and do not spend your allowance.
+**Platform notes:** Guided Gemini setup supports macOS and Linux with a graphical terminal; Windows Gemini integration is not enabled. Your school account must have CLI subscription access. Fresh sign-in may require selecting the institutional subscription and completing first-run prompts. Cancel setup stops gateway auto-connection; close the external sign-in terminal separately. The gateway does not use a Google developer API key or Vertex fallback.
 
-Install this update over your existing desktop app to retain its connections and usage history.
+Mac apps are ad-hoc signed but not notarized; Windows installers are unsigned. Managed devices may need administrator approval. No system-wide security changes are required. Version 2.2.1’s Mac signature fix is included.
 
-Desktop features:
-
-- Native installers for Apple Silicon/Intel Macs, Windows x64 and Linux x64. Desktop users do not need Node, npm or Homebrew.
-- Automatic service startup and dashboard unlock; private persistent data and controlled external sign-in links.
-- Pinned SHA-256-verified CLIProxyAPI setup for ChatGPT and portable tool detection.
-- Guided setup, in-dashboard endpoint verification, app-key instructions and an OpenAPI-backed API reference.
-- Cross-platform builds and synthetic startup checks, preserving authentication and quota protections.
-
-**Installation notes:** Mac apps use ad-hoc signatures and are not notarized; Windows installers are unsigned. Gemini requires a separate Antigravity CLI installation and enabled school subscription; its integration is not enabled on Windows. The complete live subscription workflow has been checked on Apple Silicon macOS. Build checks do not verify institutional entitlements on other systems.
-
-See the [setup guide](https://github.com/mysterious-joker/nus-soc-ai-gateway/blob/main/docs/setup.md) for installation, migration and troubleshooting. Download your architecture and use SHA256SUMS.txt to verify files. Existing browser-only installations still work with npm start and npm run open.
+See the [setup guide](https://github.com/mysterious-joker/nus-soc-ai-gateway/blob/main/docs/setup.md) for sign-in, migration and troubleshooting. SHA256SUMS.txt contains installer checksums. Browser-only source installations remain supported.

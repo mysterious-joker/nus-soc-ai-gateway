@@ -1,6 +1,6 @@
 {
   "name": "nus-soc-ai-gateway",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "private": true,
   "description": "A local subscription-aware AI gateway for NUS SoC students: ChatGPT Edu, Gemini Enterprise and SoCLaaS.",
   "main": "desktop/main.js",
