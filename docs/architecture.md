@@ -2,11 +2,13 @@
 
 ## Runtime
 
-The application is a Node.js HTTP server with a vanilla JavaScript dashboard and SQLite persistence. There is no frontend build step. The only production npm dependency is `ws` for realtime WebSockets. CLIProxyAPI and Antigravity are separately installed subprocesses.
+The application is a Node.js HTTP server with a vanilla JavaScript dashboard and SQLite persistence. There is no frontend build step. Electron embeds the server in its main process and displays the dashboard in a sandboxed renderer with Node integration disabled. The browser-only server remains supported. Runtime libraries handle WebSockets and archive extraction. CLIProxyAPI is a managed or external subprocess; Antigravity remains separately installed.
 
 | Component                             | Responsibility                                                                 |
 | ------------------------------------- | ------------------------------------------------------------------------------ |
 | `server.js`                           | Loopback listener, dashboard/API routes, body limits, concurrency and shutdown |
+| `desktop/`                            | App lifecycle, automatic unlock, renderer isolation and external-link policy   |
+| `lib/tools.js`                        | Portable detection and pinned, checksum-verified bridge installation           |
 | `lib/security.js`                     | Dashboard sessions, CSRF, Host/Origin checks, secure file helpers              |
 | `lib/providers.js`                    | Institutional identity validation, provider discovery and quota parsing        |
 | `lib/catalog.js`                      | Refresh state, namespaces, provenance, verification gate and quota checks      |
@@ -37,7 +39,7 @@ These protect a personal local deployment. They are not multi-user isolation, a 
 
 ## State
 
-`GATEWAY_DATA_DIR`, defaulting to `data/`, holds the database, dashboard and bridge tokens, encryption key, bridge configuration, verified OAuth files, staging/quarantine directories and CLI workspace. Directories are owner-only; sensitive files use owner read/write permissions.
+Desktop uses its OS application-data directory; the source server uses `GATEWAY_DATA_DIR`, defaulting to `data/`. State includes the database, dashboard and bridge tokens, encryption key, bridge configuration, verified OAuth files, staging/quarantine directories, managed tools and CLI workspace. POSIX directories are owner-only and sensitive files use owner read/write modes. Windows protection also depends on the user profile's inherited ACLs.
 
 The SoCLaaS key uses AES-256-GCM with a local encryption key. This protects a database-only disclosure, not access to the entire OS account. OAuth refresh credentials remain readable by their local bridge process. The CLI and provider may retain independent history. Legacy database migration code preserves earlier usage and labels estimated historical counts separately.
 

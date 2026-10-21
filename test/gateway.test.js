@@ -265,38 +265,46 @@ test("proxy distinguishes provider IDs and records Responses streaming usage", a
   assert.equal(upstreamBody.model, "chatgpt/shared-model");
   assert.equal(store.analytics().totals.tokens, 10);
 });
-test("OAuth stdin stays open while waiting for the browser callback", async () => {
-  const dataDir = temporary();
-  const executable = path.join(dataDir, "fake-oauth");
-  fs.writeFileSync(
-    executable,
-    `#!/usr/bin/env node
+test(
+  "OAuth stdin stays open while waiting for the browser callback",
+  { skip: process.platform === "win32" && "POSIX executable fixture" },
+  async () => {
+    const dataDir = temporary();
+    const executable = path.join(dataDir, "fake-oauth");
+    fs.writeFileSync(
+      executable,
+      `#!/usr/bin/env node
 const fs=require('node:fs');const path=require('node:path');
 const config=JSON.parse(fs.readFileSync(process.argv[process.argv.indexOf('-config')+1],'utf8'));
 process.stdin.resume();process.stdin.on('end',()=>process.exit(0));
 console.log('https://auth.openai.com/oauth/authorize?state=test');
 setTimeout(()=>{fs.writeFileSync(path.join(config.oauth['auth-dir'],'account.json'),JSON.stringify({type:'codex',access_token:'synthetic'}));process.exit(0);},350);
 `,
-    { mode: 0o700 },
-  );
-  const bridge = createBridge({
-    dataDir,
-    port: 8317,
-    binary: executable,
-    verify: async () => ({
-      email: "test@u.nus.edu",
-      subject: "test",
-      verifiedAt: new Date().toISOString(),
-    }),
-  });
-  await bridge.startLogin("chatgpt", "browser");
-  for (let i = 0; i < 30 && bridge.flows().chatgpt.status !== "completed"; i++)
-    await new Promise((r) => setTimeout(r, 50));
-  assert.equal(bridge.flows().chatgpt.status, "completed");
-  assert.equal(bridge.accounts().length, 1);
-  bridge.stop();
-  fs.rmSync(dataDir, { recursive: true, force: true });
-});
+      { mode: 0o700 },
+    );
+    const bridge = createBridge({
+      dataDir,
+      port: 8317,
+      binary: executable,
+      verify: async () => ({
+        email: "test@u.nus.edu",
+        subject: "test",
+        verifiedAt: new Date().toISOString(),
+      }),
+    });
+    await bridge.startLogin("chatgpt", "browser");
+    for (
+      let i = 0;
+      i < 30 && bridge.flows().chatgpt.status !== "completed";
+      i++
+    )
+      await new Promise((r) => setTimeout(r, 50));
+    assert.equal(bridge.flows().chatgpt.status, "completed");
+    assert.equal(bridge.accounts().length, 1);
+    bridge.stop();
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  },
+);
 test("a missing bridge executable is handled without crashing the gateway", async () => {
   const dataDir = temporary();
   const bridge = createBridge({

@@ -18,7 +18,10 @@ function temporary(t) {
 }
 test("executable detection honors PATH and explicit overrides without silent fallback", (t) => {
   const dir = temporary(t);
-  const bin = path.join(dir, "cliproxyapi");
+  const bin = path.join(
+    dir,
+    process.platform === "win32" ? "cliproxyapi.exe" : "cliproxyapi",
+  );
   fs.writeFileSync(bin, "test", { mode: 0o700 });
   assert.equal(
     resolveTool("cliproxyapi", { env: { PATH: dir }, home: dir }).path,

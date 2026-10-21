@@ -13,7 +13,7 @@ npm run format:check
 npm test
 ```
 
-Run `npm run format` before committing. Core tests use fake providers and temporary directories; no school credentials or installed provider CLIs are needed. CI runs these checks on Node 22 and 24. The full live workflow is currently tested on macOS.
+Run `npm run format` before committing. Core tests use fake providers and temporary directories; no school credentials or installed provider CLIs are needed. CI checks Node 22 and 24, plus desktop builds and startup on macOS, Linux and Windows. The full live workflow is tested on macOS. Run `npm run test:desktop` for shell changes; see [release engineering](docs/releases.md) for packaging and platform limits.
 
 ## Pull requests
 

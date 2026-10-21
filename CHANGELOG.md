@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## 2.1.0 — 2026-10-21
+
+- Desktop application with bundled runtime, automatic service lifecycle and dashboard unlock.
+- Pinned, checksum-verified ChatGPT tool setup and portable executable/browser discovery.
+- Guided onboarding, endpoint verification in the Playground and clearer app-key setup.
+- Installer builds and synthetic desktop checks for macOS, Linux and Windows.
+- Platform coverage, migration, release and third-party component documentation.
 
 - User-friendly local API reference with copyable requests, response examples, required fields and provider restrictions.
 - Downloadable OpenAPI 3.1 client contract with CI validation and route coverage checks.

@@ -14,6 +14,8 @@ The application separates dashboard and app credentials, checks Host/Origin, use
 
 ## Sensitive files
 
+Desktop uses a sandboxed, context-isolated renderer with Node integration disabled. External navigation is restricted to approved authentication, setup and project links. Managed bridge downloads must match pinned SHA-256 digests before extraction. Desktop releases are currently unsigned and not notarized; download only from this repository's releases and follow the installation notes. Data in the OS application-data directory is just as sensitive as source-mode `data/`.
+
 Never commit or attach `data/`, `output/`, `.playwright-cli/`, `.env` files, OAuth JSON, databases, keyring exports, or dashboard URLs containing tokens. `.gitignore` covers default runtime paths; if you customize `GATEWAY_DATA_DIR`, keep it outside the repository. Reports can contain school project metadata even when they contain no secrets.
 
 App keys are shown once and stored as hashes. Revoking a key blocks new requests, but does not cancel already-running requests or open realtime sessions. Stop the server to terminate active connections immediately. If provider credentials leak, revoke them at the provider as well as removing local state.

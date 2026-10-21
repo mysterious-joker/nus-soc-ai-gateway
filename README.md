@@ -46,24 +46,34 @@ Availability depends on your account, institutional configuration and connector 
 
 ## Quick start
 
-The full subscription workflow is tested on **macOS**. Use Node.js **22.13+**; `.nvmrc` selects Node 24. Install [CLIProxyAPI 8.x](https://github.com/router-for-me/CLIProxyAPI) for ChatGPT and [Antigravity CLI](https://antigravity.google/docs/cli/) for Gemini. They are separate dependencies and are not bundled. See [setup](docs/setup.md) for paths, login and compatibility details.
+### Desktop app
+
+Download your installer from [GitHub Releases](https://github.com/mysterious-joker/nus-soc-ai-gateway/releases/latest): macOS (Apple Silicon or Intel), Windows x64, or Linux x64. Open **NUS SoC AI Gateway**; it starts the local service and unlocks the dashboard automatically. Desktop users do not need Node.js, npm or Homebrew.
+
+1. **Connect a source.** For ChatGPT, click **Prepare ChatGPT connection**, then sign in with your school account. The app downloads a pinned, checksum-verified CLIProxyAPI release. SoCLaaS needs only your key. Gemini requires a separately installed and signed-in [Antigravity CLI](https://antigravity.google/docs/getting-started?tab=cli).
+2. **Test a model.** Choose **Test a model**, enter a short prompt, and click **Send & verify endpoint**. This uses provider allowance. Only successful model/endpoint checks become available to apps.
+3. **Connect your app.** Create an app key in Sources, copy the displayed API base URL, and choose a verified model in your OpenAI-compatible client. Keep the gateway open while using it.
+
+The complete live subscription workflow has been checked on macOS. Builds and synthetic startup checks cover released platforms; they do not prove institutional access on every OS. **Gemini CLI integration is not enabled on Windows.** The first desktop release is unsigned and not notarized; see [installation and platform notes](docs/setup.md).
+
+### Run from source
+
+Use Node.js **22.13+** (Node 24 recommended) and npm:
 
 ```sh
 git clone https://github.com/mysterious-joker/nus-soc-ai-gateway.git
 cd nus-soc-ai-gateway
 npm ci
-npm start
+npm run desktop
 ```
 
-In a second terminal in the same folder:
+For a browser-only gateway, run `npm start`, then in a second terminal:
 
 ```sh
 npm run open
 ```
 
-1. Connect your available sources in **Sources**. You do not need all three.
-2. Verify selected models with the [verification commands](docs/verification.md). New entries stay out of `/v1/models` until checks pass. Live checks consume allowance.
-3. Create an **App API key** in Sources and use `http://localhost:4000/v1` as your client's base URL.
+The launcher supports macOS, Windows and Linux. The browser-only server defaults to port 4000; desktop selects a free port if occupied. Always copy the address shown in Sources. Desktop and source-server profiles are separate; existing source data remains untouched. See [setup](docs/setup.md) for migration and configuration.
 
 ```sh
 export NUS_GATEWAY_KEY='YOUR_LOCAL_GATEWAY_KEY'
@@ -98,10 +108,12 @@ npm ci
 npm run check
 npm run format:check
 npm test
+npm run test:desktop
+npm run build:desktop
 ```
 
-Tests use temporary directories and mocked services. CI never uses institutional accounts or runs live generation.
+Tests use temporary directories and mocked services. Desktop CI builds native installers and runs real renderer/startup checks on macOS, Linux and Windows. CI never uses institutional accounts or runs live generation. See [release engineering](docs/releases.md).
 
 ## License and acknowledgements
 
-[MIT](LICENSE). Built with [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI), the separately installed [Antigravity CLI](https://antigravity.google/docs/cli/), and [ws](https://github.com/websockets/ws). Third-party software and services retain their respective licenses and terms. Use this project within your provider and institutional access policies.
+[MIT](LICENSE). Built with Electron, CLIProxyAPI, the separately installed Antigravity CLI and the libraries listed in [third-party notices](THIRD_PARTY_NOTICES.md). Use this project within your provider and institutional access policies.

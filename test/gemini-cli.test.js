@@ -106,36 +106,52 @@ const generate = (gemini) =>
     body: { messages: [{ role: "user", content: "Hi" }] },
     endpoint: "/v1/chat/completions",
   });
-test("CLI adapter validates identity before transmitting the prompt and requires active hooks", async (t) => {
-  const good = fixture(t);
-  assert.equal(
-    (await good.gemini.connect()).models[0].id,
-    "gemini/server-model",
-  );
-  assert.equal((await generate(good.gemini)).response, "你好");
-  const bad = fixture(t, "wrong-account");
-  await assert.rejects(generate(bad.gemini), /subscription account/);
-  assert.equal(fs.existsSync(path.join(bad.dir, "prompt-received")), false);
-  const noHook = fixture(t, "no-hook");
-  await assert.rejects(
-    generate(noHook.gemini),
-    /restrictions were not activated/,
-  );
-});
-test("CLI disconnect cancels an active process and blocks subsequent requests", async (t) => {
-  const { dir, gemini } = fixture(t, "hang");
-  const request = generate(gemini);
-  const rejected = assert.rejects(request, /disconnected/);
-  for (
-    let i = 0;
-    i < 100 && !fs.existsSync(path.join(dir, "prompt-received"));
-    i++
-  )
-    await new Promise((r) => setTimeout(r, 10));
-  gemini.disconnect();
-  await rejected;
-  await assert.rejects(generate(gemini), /Connect Gemini/);
-});
+test(
+  "CLI adapter validates identity before transmitting the prompt and requires active hooks",
+  {
+    skip:
+      process.platform === "win32" &&
+      "Gemini connector is not enabled on Windows",
+  },
+  async (t) => {
+    const good = fixture(t);
+    assert.equal(
+      (await good.gemini.connect()).models[0].id,
+      "gemini/server-model",
+    );
+    assert.equal((await generate(good.gemini)).response, "你好");
+    const bad = fixture(t, "wrong-account");
+    await assert.rejects(generate(bad.gemini), /subscription account/);
+    assert.equal(fs.existsSync(path.join(bad.dir, "prompt-received")), false);
+    const noHook = fixture(t, "no-hook");
+    await assert.rejects(
+      generate(noHook.gemini),
+      /restrictions were not activated/,
+    );
+  },
+);
+test(
+  "CLI disconnect cancels an active process and blocks subsequent requests",
+  {
+    skip:
+      process.platform === "win32" &&
+      "Gemini connector is not enabled on Windows",
+  },
+  async (t) => {
+    const { dir, gemini } = fixture(t, "hang");
+    const request = generate(gemini);
+    const rejected = assert.rejects(request, /disconnected/);
+    for (
+      let i = 0;
+      i < 100 && !fs.existsSync(path.join(dir, "prompt-received"));
+      i++
+    )
+      await new Promise((r) => setTimeout(r, 10));
+    gemini.disconnect();
+    await rejected;
+    await assert.rejects(generate(gemini), /Connect Gemini/);
+  },
+);
 
 test("Gemini routes chat and Responses streaming through the adapter and records reported usage", async (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "gemini-http-test-"));
