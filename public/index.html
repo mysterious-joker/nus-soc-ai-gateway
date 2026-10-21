@@ -54,8 +54,9 @@
             /><button class="primary" type="submit">Unlock dashboard</button>
           </form>
           <p class="muted">
-            On this Mac, run <code>npm run open</code> to open an authenticated
-            dashboard. You can also find the token in
+            Open the desktop app to unlock automatically, or run
+            <code>npm run open</code>
+            from a source installation. You can also find the token in
             <code>data/dashboard-token</code>.
           </p>
           <p class="muted small">
@@ -102,9 +103,18 @@
             </button>
           </nav>
           <section id="sources" role="tabpanel" aria-labelledby="tab-sources">
+            <section id="setup" class="setup" aria-labelledby="setup-title">
+              <h1 id="setup-title">Set up your gateway</h1>
+              <p class="muted">
+                Connect any one source to begin. Add the others whenever you
+                need them.
+              </p>
+              <ol id="setup-steps" class="setup-steps"></ol>
+              <div id="setup-tools"></div>
+            </section>
             <div class="section-heading">
               <div>
-                <h1>Connected sources</h1>
+                <h2>Connected sources</h2>
                 <p class="muted">Institutional accounts. One local API.</p>
               </div>
               <button id="refresh">Refresh sources</button>
@@ -124,7 +134,7 @@
               </div>
               <button id="copy-url" class="quiet">Copy URL</button>
             </div>
-            <details class="keys">
+            <details class="keys" id="app-keys">
               <summary>
                 App API keys
                 <span class="muted small"
@@ -134,6 +144,24 @@
               <div class="details-body">
                 <p class="muted">
                   Keys grant inference access only. New keys are shown once.
+                </p>
+                <ol class="connection-instructions">
+                  <li>
+                    In your app, choose an
+                    <strong>OpenAI-compatible</strong> provider.
+                  </li>
+                  <li>
+                    Paste the API base URL above and create a gateway key below.
+                  </li>
+                  <li>
+                    Select a verified model from Models. Keep this gateway
+                    running while your app uses it.
+                  </li>
+                </ol>
+                <p class="muted small">
+                  Different apps support different capabilities. See the
+                  <a href="/reference">API reference</a> for examples and
+                  supported parameters.
                 </p>
                 <form id="key-form" class="inline-form">
                   <div>
@@ -173,6 +201,9 @@
                   accounts.
                 </p>
               </div>
+            </div>
+            <div class="button-row">
+              <button id="test-discovered">Test a discovered model</button>
             </div>
             <div class="filters">
               <div class="search">
@@ -263,6 +294,15 @@
               </div>
             </div>
             <form id="playground-form">
+              <label class="verification-option"
+                ><input type="checkbox" id="verify-model" /> Include discovered
+                models and verify this endpoint</label
+              >
+              <p id="verification-note" class="muted small" hidden>
+                This sends a real request using your provider quota. Only the
+                selected endpoint is enabled for apps after a successful
+                response. Other endpoints remain unverified.
+              </p>
               <div class="playground-grid">
                 <div>
                   <label for="playground-model">Model</label
@@ -310,7 +350,7 @@ Choose a model and send your first request.</pre>
         </div>
       </main>
       <footer>
-        <span>Private to this Mac</span
+        <span>Private to this computer</span
         ><span>Independent local tool · Not an official NUS service</span>
       </footer>
     </div>

@@ -838,3 +838,57 @@ main {
 #upload-field {
   margin-bottom: 1rem;
 }
+.setup {
+  padding-block: 0 28px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--line);
+}
+.setup h1 {
+  margin-bottom: 8px;
+}
+.setup-steps {
+  display: flex;
+  gap: 32px;
+  padding-left: 24px;
+  margin-block: 24px;
+}
+.setup-steps li {
+  flex: 1;
+  padding-left: 2px;
+}
+.setup-steps li > span {
+  display: block;
+  padding-left: 12px;
+}
+.setup-steps .complete::marker {
+  color: var(--success);
+}
+.tool-details {
+  margin-top: 20px;
+}
+.tool-details summary {
+  cursor: pointer;
+}
+.tool-details summary span {
+  margin-left: 12px;
+}
+.connection-instructions {
+  padding-left: 22px;
+  line-height: 1.8;
+}
+.verification-option {
+  display: block;
+  margin-bottom: 12px;
+}
+@media (max-width: 600px) {
+  .setup-steps {
+    display: block;
+  }
+  .setup-steps li {
+    margin-block: 12px;
+  }
+  .tool-details summary span {
+    display: block;
+    margin-left: 0;
+  }
+}

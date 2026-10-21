@@ -210,9 +210,8 @@ async function refresh() {
 function render() {
   $("gateway-status").textContent = !dashboard.initialized
     ? "Verifying saved accounts…"
-    : dashboard.bridge.running
-      ? "Gateway online"
-      : "Bridge offline";
+    : "Gateway online";
+  renderSetup();
   $("base-url").textContent = dashboard.baseUrl;
   $("model-count").textContent = dashboard.models.length;
   $("refresh").disabled = !dashboard.initialized || dashboard.refreshing;
@@ -234,6 +233,141 @@ function render() {
   renderPlayground();
   if (dashboard.notices?.length && !$("notice").textContent)
     notice(dashboard.notices.join("\n"));
+}
+function renderSetup() {
+  const connected = dashboard.sources.some(
+    (source) => source.status === "connected" || source.status === "partial",
+  );
+  const verified = dashboard.models.some((model) => model.available);
+  const keys = dashboard.keys.length > 0;
+  $("setup-title").textContent =
+    connected && verified && keys
+      ? "Your gateway is ready"
+      : "Set up your gateway";
+  $("setup-steps").replaceChildren(
+    ...[
+      [
+        "Connect a source",
+        connected,
+        () => $("source-list").scrollIntoView({ block: "start" }),
+      ],
+      ["Test a model", verified, () => openVerification()],
+      [
+        "Connect your app",
+        keys,
+        () => {
+          $("app-keys").open = true;
+          $("key-name").focus();
+        },
+      ],
+    ].map(([label, complete, click]) =>
+      el(
+        "li",
+        { class: complete ? "complete" : "" },
+        button(label, click, { class: "quiet" }),
+        el(
+          "span",
+          { class: "small muted" },
+          complete ? "Complete" : "Next step",
+        ),
+      ),
+    ),
+  );
+  const tools = dashboard.tools;
+  if (!tools) return;
+  const host = $("setup-tools");
+  const wasOpen = host.querySelector("details")?.open;
+  const details = el(
+    "details",
+    { class: "tool-details", open: wasOpen || !tools.bridge.installed },
+    el(
+      "summary",
+      {},
+      "Connection tools",
+      el(
+        "span",
+        { class: "muted small" },
+        tools.bridge.installed
+          ? "ChatGPT tool detected"
+          : "Prepare ChatGPT access",
+      ),
+    ),
+  );
+  const content = el(
+    "div",
+    { class: "details-body" },
+    el(
+      "p",
+      {},
+      tools.bridge.installed
+        ? `ChatGPT: connection tool detected${tools.bridge.version ? ` (v${tools.bridge.version})` : ""}.`
+        : "ChatGPT needs a small connection tool. The gateway downloads and verifies it for your computer.",
+    ),
+  );
+  if (!tools.bridge.installed && tools.bridge.canInstall)
+    content.append(
+      button(
+        tools.bridge.installing
+          ? "Downloading and verifying…"
+          : "Prepare ChatGPT connection",
+        async () => {
+          await api("/api/tools/bridge", { method: "POST" });
+          await refresh();
+          toast("Connection tool ready. Connect your ChatGPT account below.");
+        },
+        { disabled: tools.bridge.installing, class: "primary" },
+      ),
+    );
+  if (!tools.bridge.canInstall && !tools.bridge.installed)
+    content.append(
+      el(
+        "p",
+        { class: "muted" },
+        "Automatic setup is unavailable with this platform or CPA_BIN override. See the setup guide.",
+      ),
+    );
+  if (tools.bridge.error)
+    content.append(el("p", { class: "notice" }, tools.bridge.error));
+  if (tools.bridge.installed && dashboard.bridge.error)
+    content.append(el("p", { class: "notice" }, dashboard.bridge.error));
+  content.append(
+    el(
+      "p",
+      { class: "muted small" },
+      tools.gemini.supported
+        ? tools.gemini.installed
+          ? "Gemini: Antigravity CLI detected. Sign in with your school subscription in agy, then connect the session below."
+          : "Gemini: install the official Antigravity CLI and sign in with your school subscription, then return here."
+        : "Gemini CLI integration is not yet enabled on Windows. ChatGPT and SoCLaaS remain available.",
+    ),
+    el(
+      "div",
+      { class: "button-row" },
+      el(
+        "a",
+        {
+          href: "https://antigravity.google/docs/getting-started?tab=cli",
+          target: "_blank",
+          rel: "noopener noreferrer",
+        },
+        "Gemini setup guide",
+      ),
+      button("Check again", refresh, { class: "quiet" }),
+    ),
+    el(
+      "p",
+      { class: "muted small" },
+      "SoCLaaS needs only your API key. You can use it immediately.",
+    ),
+  );
+  details.append(content);
+  host.replaceChildren(details);
+}
+function openVerification() {
+  $("verify-model").checked = true;
+  renderPlayground();
+  switchView("playground");
+  $("playground-model").focus();
 }
 function button(text, fn, attrs = {}) {
   return el(
@@ -361,7 +495,7 @@ function renderSources() {
           { class: "muted small" },
           source.status === "connected"
             ? "Text chat through your school CLI subscription. Tool execution is disabled."
-            : "Sign in with agy on this Mac using your school subscription, then connect here. Text chat only; tool execution is disabled.",
+            : "Sign in with agy using your school subscription, then connect here. Text chat only; tool execution is disabled.",
         ),
       );
       const actions = el(
@@ -375,6 +509,12 @@ function renderSources() {
             await api("/api/providers/gemini/cli", { method: "POST" });
             await refresh();
             toast("Gemini CLI session connected");
+          },
+          {
+            disabled:
+              dashboard.tools &&
+              (!dashboard.tools.gemini.installed ||
+                !dashboard.tools.gemini.supported),
           },
         ),
       );
@@ -414,8 +554,10 @@ function renderSources() {
       const actions = el(
         "div",
         { class: "actions" },
-        button(source.accounts.length ? "Add account" : "Connect account", () =>
-          startOAuth(source.provider, "browser"),
+        button(
+          source.accounts.length ? "Add account" : "Connect account",
+          () => startOAuth(source.provider, "browser"),
+          { disabled: dashboard.tools && !dashboard.tools.bridge.installed },
         ),
       );
       if (source.provider === "chatgpt")
@@ -946,7 +1088,7 @@ function renderPlayground() {
   const previous = select.value;
   const models = dashboard.models.filter(
     (m) =>
-      m.available &&
+      (m.available || ($("verify-model").checked && m.routable)) &&
       [
         "llm",
         "embedding",
@@ -960,10 +1102,23 @@ function renderPlayground() {
       ? models.map((m) =>
           el("option", { value: m.id }, `${m.name} · ${NAMES[m.provider]}`),
         )
-      : [el("option", { value: "" }, "Connect a source to discover models")]),
+      : [
+          el(
+            "option",
+            { value: "" },
+            $("verify-model").checked
+              ? "Connect a source to discover models"
+              : "No verified models yet — enable verification above",
+          ),
+        ]),
   );
   if (models.some((m) => m.id === previous)) select.value = previous;
   $("send").disabled = !models.length || $("send").dataset.busy === "true";
+  $("verification-note").hidden = !$("verify-model").checked;
+  if ($("send").dataset.busy !== "true")
+    $("send").textContent = $("verify-model").checked
+      ? "Send & verify endpoint"
+      : "Send request";
   updateExample();
 }
 function updateExample() {
@@ -1103,6 +1258,8 @@ $("playground-model").addEventListener("change", () => {
   updateExample();
 });
 $("media-file").addEventListener("change", updateExample);
+$("verify-model").addEventListener("change", renderPlayground);
+$("test-discovered").addEventListener("click", openVerification);
 $("playground-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const btn = event.submitter;
@@ -1155,7 +1312,7 @@ $("playground-form").addEventListener("submit", (event) => {
           if (text) body.set("prompt", text);
         }
         const data = await api(
-          `/api/playground?endpoint=${encodeURIComponent(endpoint)}`,
+          `/api/${$("verify-model").checked ? "verify" : "playground"}?endpoint=${encodeURIComponent(endpoint)}`,
           {
             method: "POST",
             body,
