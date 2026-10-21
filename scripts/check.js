@@ -4,7 +4,7 @@ const { spawnSync } = require("node:child_process");
 const root = path.resolve(__dirname, "..");
 const files = [
   "server.js",
-  ...["lib", "public", "scripts", "test"].flatMap((dir) =>
+  ...["lib", "public", "scripts", "test", "desktop"].flatMap((dir) =>
     fs
       .readdirSync(path.join(root, dir))
       .filter((file) => file.endsWith(".js"))

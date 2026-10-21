@@ -85,6 +85,7 @@ function createGateway(options = {}) {
   let activeRequests = 0;
   let initialized = false;
   let timer;
+  let stopPromise;
   async function audioSpeech(req, res, body, key, allowUnverified = false) {
     const endpoint = "/v1/audio/speech";
     if (
@@ -471,15 +472,19 @@ function createGateway(options = {}) {
       timer.unref();
       return server.address();
     },
-    async stop() {
-      clearInterval(timer);
-      realtime.stop();
-      bridge.stop();
-      gemini.stop();
-      server.closeAllConnections();
-      await new Promise((resolve) => server.close(resolve));
-      store.db.exec("PRAGMA wal_checkpoint(TRUNCATE)");
-      store.db.close();
+    stop() {
+      if (stopPromise) return stopPromise;
+      stopPromise = (async () => {
+        clearInterval(timer);
+        realtime.stop();
+        await bridge.stop();
+        gemini.stop();
+        server.closeAllConnections();
+        await new Promise((resolve) => server.close(resolve));
+        store.db.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+        store.db.close();
+      })();
+      return stopPromise;
     },
   };
 }

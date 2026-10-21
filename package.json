@@ -1,9 +1,9 @@
 {
   "name": "nus-soc-ai-gateway",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "description": "A local subscription-aware AI gateway for NUS SoC students: ChatGPT Edu, Gemini Enterprise and SoCLaaS.",
-  "main": "server.js",
+  "main": "desktop/main.js",
   "scripts": {
     "start": "node server.js",
     "open": "node scripts/open.js",
@@ -11,7 +11,10 @@
     "check": "node scripts/check.js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "verify:live": "node scripts/smoke-gateway.js --live"
+    "verify:live": "node scripts/smoke-gateway.js --live",
+    "desktop": "node scripts/desktop.js",
+    "test:desktop": "node scripts/desktop.js --smoke-test",
+    "build:desktop": "electron-builder --publish never"
   },
   "engines": {
     "node": ">=22.13.0"
@@ -38,5 +41,9 @@
   },
   "overrides": {
     "global-agent": "4.1.3"
+  },
+  "author": {
+    "name": "msyterious-joker",
+    "email": "295397789+mysterious-joker@users.noreply.github.com"
   }
 }

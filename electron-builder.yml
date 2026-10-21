@@ -1,0 +1,29 @@
+appId: io.github.mysterious-joker.nus-soc-ai-gateway
+productName: NUS SoC AI Gateway
+icon: build/icon.png
+asar: true
+npmRebuild: false
+files:
+  - desktop/**
+  - server.js
+  - lib/**
+  - public/**
+  - package.json
+  - LICENSE
+  - THIRD_PARTY_NOTICES.md
+directories:
+  output: dist
+artifactName: nus-soc-ai-gateway-${version}-${os}-${arch}.${ext}
+mac:
+  category: public.app-category.developer-tools
+  target: [dmg, zip]
+  identity: null
+win:
+  target: [nsis]
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+linux:
+  category: Development
+  target: [AppImage, deb]
