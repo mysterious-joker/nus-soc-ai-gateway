@@ -161,22 +161,30 @@ async function start() {
   await createWindow();
   if (smoke) {
     // Runs the real renderer, HTTP server, session exchange and SQLite store in isolation.
-    const deadline = Date.now() + 15_000;
-    let ready = false;
-    while (!ready && Date.now() < deadline) {
-      ready = await window.webContents.executeJavaScript(
-        "!document.getElementById('workspace').hidden && document.querySelectorAll('.source').length === 3",
-      );
-      if (!ready) await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-    if (!ready) throw new Error("Desktop dashboard did not unlock.");
+    const waitFor = async (expression) => {
+      const deadline = Date.now() + 15_000;
+      while (Date.now() < deadline) {
+        if (await window.webContents.executeJavaScript(expression)) return;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      throw new Error("Desktop session transition timed out.");
+    };
+    const ready =
+      "!document.getElementById('workspace').hidden && document.querySelectorAll('.source').length === 3";
+    await waitFor(ready);
+    await window.webContents.executeJavaScript(
+      "document.getElementById('lock').click()",
+    );
+    await waitFor("!document.getElementById('unlock').hidden");
+    await window.loadURL(dashboardUrl());
+    await waitFor(ready);
     const isolated = await window.webContents.executeJavaScript(
       "typeof require === 'undefined' && typeof process === 'undefined' && location.hash === ''",
     );
     if (!isolated)
       throw new Error("Desktop isolation or token removal failed.");
     console.log(
-      "Desktop smoke passed: SQLite, HTTP startup, automatic unlock, three sources, isolated renderer, removed token fragment.",
+      "Desktop smoke passed: SQLite, HTTP startup, automatic unlock, lock/reopen, three sources, isolated renderer, removed token fragment.",
     );
     app.quit();
   }

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.1 — 2026-10-21
+
+- Fix reopening a locked dashboard from a token link without a full page reload.
+- Cover lock/reopen in the desktop smoke test. First published desktop installers include this correction; the 2.1.0 release workflow was stopped before publication.
+
 ## 2.1.0 — 2026-10-21
 
 - Desktop application with bundled runtime, automatic service lifecycle and dashboard unlock.

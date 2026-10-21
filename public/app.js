@@ -1417,7 +1417,7 @@ $("playground-form").addEventListener("submit", (event) => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden && csrf) refresh();
 });
-(async () => {
+async function resumeDashboard() {
   const fragment = new URLSearchParams(location.hash.slice(1));
   const token = fragment.get("token");
   if (location.hash) history.replaceState(null, "", location.pathname);
@@ -1432,4 +1432,10 @@ document.addEventListener("visibilitychange", () => {
     lockView();
     if (token) notice(error.message);
   }
-})();
+}
+// Desktop's Open dashboard command can navigate within the current document.
+window.addEventListener("hashchange", () => {
+  if (new URLSearchParams(location.hash.slice(1)).has("token"))
+    resumeDashboard();
+});
+resumeDashboard();
