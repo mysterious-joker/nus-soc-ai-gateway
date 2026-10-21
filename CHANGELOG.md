@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.2.0 — 2026-10-21
+
+- Add **Verify all models** to check every detected model's supported endpoints in one click, with progress, per-endpoint results and cancellation.
+- Use short prompts, the lowest advertised ChatGPT reasoning level, a 32-token SoCLaaS output cap and bundled tiny media fixtures. Share speech/realtime generation evidence to avoid duplicate requests.
+- Run checks sequentially without retries; pause a source on authentication, quota or service-availability errors. Preserve dashboard authentication, CSRF, quota checks and usage accounting.
+- Keep batch progress across dashboard reloads; cancel on lock or shutdown and block source changes during a run. Unsupported or stale models remain explicitly skipped.
+- Document probe coverage, CLI token-limit restrictions and interpretation of failed minimal requests. Add synthetic integration coverage and portable fixture tests.
+
 ## 2.1.2 — 2026-10-21
 
 - Show all detected models in the dashboard by default, including untested and unavailable entries with their status.

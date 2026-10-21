@@ -1,8 +1,12 @@
-This update fixes the model catalog hiding detected but untested models by default.
+Verify all detected models with one button: **Models → Verify all models**.
 
-- The dashboard now shows all detected models with their verification and availability status.
-- Use **Verify** beside a supported, untested model to open it directly in the Playground.
-- App API keys still receive only successfully verified model endpoints. Discovery alone does not enable inference.
+- Checks every supported model/endpoint with short prompts and bundled tiny audio/image inputs. No prompt or file upload is needed.
+- Shows progress and individual results; supports cancellation and dashboard reloads. Unsupported or stale models are reported as skipped.
+- Runs one request at a time without retries and pauses a source after authentication, quota or service-availability errors.
+- Uses a 32-token SoCLaaS text output cap and the lowest advertised ChatGPT reasoning level. CLI services control their own output limits. Media checks also consume allowance.
+- Successful endpoint checks become available to apps immediately. Failed minimal requests may reflect temporary errors or insufficient output budget; they do not establish subscription exclusion.
+
+See [verification details](https://github.com/mysterious-joker/nus-soc-ai-gateway/blob/main/docs/verification.md#one-click-full-verification) for exact probe coverage and limits. Automated checks use synthetic providers and do not spend your allowance.
 
 Install this update over your existing desktop app to retain its connections and usage history.
 
