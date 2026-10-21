@@ -14,6 +14,7 @@ const { createCatalog } = require("./lib/catalog");
 const { discover } = require("./lib/providers");
 const { proxy } = require("./lib/proxy");
 const { createGeminiCli } = require("./lib/gemini-cli");
+const { createTools } = require("./lib/tools");
 const { ENDPOINTS } = require("./lib/capabilities");
 const { readBody } = require("./lib/media");
 const {
@@ -30,21 +31,22 @@ function createGateway(options = {}) {
     path.join(__dirname, "data");
   const store = options.store || createStore(dataDir);
   const sessions = createSessions(dataDir);
+  const tools = options.tools || createTools({ dataDir });
   const gemini =
     options.gemini ||
-    createGeminiCli({ dataDir, store, binary: process.env.AGY_BIN });
+    createGeminiCli({
+      dataDir,
+      store,
+      binary: () => tools.resolve("agy")?.path,
+    });
   let catalog;
   const bridge =
     options.bridge ||
     createBridge({
       dataDir,
-      port: Number(process.env.CPA_PORT || 8317),
+      port: options.bridgePort ?? Number(process.env.CPA_PORT || 8317),
       store,
-      binary:
-        process.env.CPA_BIN ||
-        (fs.existsSync("/opt/homebrew/bin/cliproxyapi")
-          ? "/opt/homebrew/bin/cliproxyapi"
-          : "cliproxyapi"),
+      binary: () => tools.resolve("cliproxyapi")?.path,
       onChange: () => {
         catalog.invalidate();
         catalog.refresh(true).catch(() => {});
@@ -184,6 +186,7 @@ function createGateway(options = {}) {
             name: "NUS SoC AI Gateway",
             baseUrl: `http://localhost:${currentPort}/v1`,
             initialized,
+            tools: tools.status(),
             bridge: bridge.status,
             notices: bridge.notices,
             refreshing: catalog.refreshing,
@@ -201,6 +204,11 @@ function createGateway(options = {}) {
             503,
             "Gateway is verifying saved accounts. Try again shortly.",
           );
+        if (route === "/api/tools/bridge" && method === "POST") {
+          await tools.installBridge();
+          bridge.start();
+          return json(res, 200, { ok: true });
+        }
         if (route === "/api/refresh" && method === "POST") {
           await catalog.refresh(true);
           return json(res, 200, { ok: true });
@@ -482,7 +490,7 @@ if (require.main === module) {
     .start()
     .then((address) =>
       console.log(
-        `NUS SoC AI Gateway is running at http://localhost:${address.port}\nRun npm run open to unlock the dashboard on this Mac.`,
+        `NUS SoC AI Gateway is running at http://localhost:${address.port}\nRun npm run open to unlock the dashboard.`,
       ),
     )
     .catch(() => {
