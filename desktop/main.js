@@ -178,13 +178,19 @@ async function start() {
     await waitFor("!document.getElementById('unlock').hidden");
     await window.loadURL(dashboardUrl());
     await waitFor(ready);
+    await window.webContents.executeJavaScript(
+      "document.getElementById('tab-models').click()",
+    );
+    await waitFor(
+      "document.getElementById('verify-all')?.getBoundingClientRect().width > 0",
+    );
     const isolated = await window.webContents.executeJavaScript(
       "typeof require === 'undefined' && typeof process === 'undefined' && location.hash === ''",
     );
     if (!isolated)
       throw new Error("Desktop isolation or token removal failed.");
     console.log(
-      "Desktop smoke passed: SQLite, HTTP startup, automatic unlock, lock/reopen, three sources, isolated renderer, removed token fragment.",
+      "Desktop smoke passed: SQLite, HTTP startup, automatic unlock, lock/reopen, three sources, Verify all models button, isolated renderer, removed token fragment.",
     );
     app.quit();
   }

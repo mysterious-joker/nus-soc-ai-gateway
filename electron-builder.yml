@@ -17,7 +17,7 @@ artifactName: nus-soc-ai-gateway-${version}-${os}-${arch}.${ext}
 mac:
   category: public.app-category.developer-tools
   target: [dmg, zip]
-  identity: null
+  identity: "-"
 win:
   target: [nsis]
 nsis:
