@@ -249,7 +249,9 @@ test(
 );
 
 test("Gemini setup HTTP routes require dashboard CSRF and prevent overlapping full verification", async (t) => {
-  const dataDir = temporary(t);
+  const dataDir = fs.mkdtempSync(
+    path.join(os.tmpdir(), "gemini-http-setup-test-"),
+  );
   let installs = 0;
   const app = createGateway({
     port: 0,
@@ -272,7 +274,10 @@ test("Gemini setup HTTP routes require dashboard CSRF and prevent overlapping fu
     catalog: { refresh: async () => {}, list: () => [], sources: () => [] },
   });
   await app.start();
-  t.after(() => app.stop());
+  t.after(async () => {
+    await app.stop();
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  });
   const base = `http://127.0.0.1:${app.server.address().port}`;
   const endpoint = base + "/api/providers/gemini/setup";
   assert.equal((await fetch(endpoint, { method: "POST" })).status, 401);
