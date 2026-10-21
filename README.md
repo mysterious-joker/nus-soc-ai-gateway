@@ -50,7 +50,7 @@ Availability depends on your account, institutional configuration and connector 
 
 Download your installer from [GitHub Releases](https://github.com/mysterious-joker/nus-soc-ai-gateway/releases/latest): macOS (Apple Silicon or Intel), Windows x64, or Linux x64. Open **NUS SoC AI Gateway**; it starts the local service and unlocks the dashboard automatically. Desktop users do not need Node.js, npm or Homebrew.
 
-1. **Connect a source.** For ChatGPT, click **Prepare ChatGPT connection**, then sign in with your school account. The app downloads a pinned, checksum-verified CLIProxyAPI release. SoCLaaS needs only your key. Gemini requires a separately installed and signed-in [Antigravity CLI](https://antigravity.google/docs/getting-started?tab=cli).
+1. **Connect a source.** For ChatGPT, click **Prepare ChatGPT connection**, then sign in with your school account. The app downloads a pinned, checksum-verified CLIProxyAPI release. SoCLaaS needs only your key. For Gemini on macOS/Linux, click **Connect Gemini**: the app prepares the CLI, reuses a saved school session or opens guided sign-in.
 2. **Verify access.** Open **Models → Verify all models** to check every detected model's supported endpoints using minimal prompts and bundled media inputs. Watch progress or cancel at any time. This consumes provider allowance; only successful model/endpoint checks become available to apps. Use **Verify** beside one model for a targeted Playground check. See [verification details](docs/verification.md) for token limits and probe coverage.
 3. **Connect your app.** Create an app key in Sources, copy the displayed API base URL, and choose a verified model in your OpenAI-compatible client. Keep the gateway open while using it.
 
@@ -116,4 +116,4 @@ Tests use temporary directories and mocked services. Desktop CI builds native in
 
 ## License and acknowledgements
 
-[MIT](LICENSE). Built with Electron, CLIProxyAPI, the separately installed Antigravity CLI and the libraries listed in [third-party notices](THIRD_PARTY_NOTICES.md). Use this project within your provider and institutional access policies.
+[MIT](LICENSE). Built with Electron, CLIProxyAPI, Google’s Antigravity CLI and the libraries listed in [third-party notices](THIRD_PARTY_NOTICES.md). Use this project within your provider and institutional access policies.

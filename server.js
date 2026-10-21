@@ -14,6 +14,7 @@ const { createCatalog } = require("./lib/catalog");
 const { discover } = require("./lib/providers");
 const { proxy } = require("./lib/proxy");
 const { createGeminiCli } = require("./lib/gemini-cli");
+const { createGeminiSetup } = require("./lib/gemini-setup");
 const { createTools } = require("./lib/tools");
 const { ENDPOINTS } = require("./lib/capabilities");
 const { readBody } = require("./lib/media");
@@ -67,6 +68,16 @@ function createGateway(options = {}) {
         (!options.bridge ? () => discoverRealtime(bridge) : undefined),
     });
   const realtime = createRealtimeRelay({ bridge, catalog, store });
+  const geminiSetup = createGeminiSetup({
+    dataDir,
+    tools,
+    gemini,
+    onConnected: async () => {
+      catalog.invalidate();
+      await catalog.refresh(true);
+    },
+    ...(options.geminiSetupOptions || {}),
+  });
   const json = (res, status, payload) => {
     res.writeHead(status, {
       "Content-Type": "application/json; charset=utf-8",
@@ -186,6 +197,7 @@ function createGateway(options = {}) {
         );
         if (route === "/api/session" && method === "DELETE") {
           await verification.cancel();
+          await geminiSetup.cancel();
           sessions.logout(req, res);
           return json(res, 200, { ok: true });
         }
@@ -201,6 +213,7 @@ function createGateway(options = {}) {
             sources: catalog.sources(),
             models: catalog.list(),
             verification: verification.snapshot(),
+            geminiSetup: geminiSetup.snapshot(),
             analytics: store.analytics(
               url.searchParams.get("timeframe") || "all",
             ),
@@ -214,11 +227,21 @@ function createGateway(options = {}) {
             "Gateway is verifying saved accounts. Try again shortly.",
           );
         if (route === "/api/verification" && method === "POST") {
+          if (geminiSetup.running())
+            throw new HttpError(
+              409,
+              "Finish or cancel Gemini setup before full verification.",
+            );
           if (verification.running())
             throw new HttpError(409, "A full verification is already running.");
           await catalog.refresh(true);
           // The dashboard may have been locked while discovery was in flight.
           sessions.require(req, true);
+          if (geminiSetup.running())
+            throw new HttpError(
+              409,
+              "Finish or cancel Gemini setup before full verification.",
+            );
           if (stopPromise)
             throw new HttpError(503, "Gateway is shutting down.");
           return json(
@@ -288,13 +311,21 @@ function createGateway(options = {}) {
           await catalog.refresh(true);
           return json(res, 200, { ok: true });
         }
+        if (route === "/api/providers/gemini/setup" && method === "POST")
+          return json(res, 202, geminiSetup.start());
+        if (route === "/api/providers/gemini/setup" && method === "DELETE")
+          return json(res, 200, await geminiSetup.cancel());
         if (route === "/api/providers/gemini/cli" && method === "POST") {
+          if (geminiSetup.running())
+            throw new HttpError(409, "Finish or cancel Gemini setup first.");
           await gemini.connect();
           catalog.invalidate();
           await catalog.refresh(true);
           return json(res, 200, { ok: true });
         }
         if (route === "/api/providers/gemini/cli" && method === "DELETE") {
+          await geminiSetup.cancel();
+          geminiSetup.reset();
           gemini.disconnect();
           catalog.invalidate();
           await catalog.refresh(true);
@@ -518,6 +549,7 @@ function createGateway(options = {}) {
       stopPromise = (async () => {
         clearInterval(timer);
         await verification.cancel();
+        await geminiSetup.cancel();
         realtime.stop();
         await bridge.stop();
         gemini.stop();

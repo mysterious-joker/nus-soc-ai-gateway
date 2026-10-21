@@ -172,6 +172,9 @@ async function start() {
     const ready =
       "!document.getElementById('workspace').hidden && document.querySelectorAll('.source').length === 3";
     await waitFor(ready);
+    await waitFor(
+      "[...document.querySelectorAll('button')].some(b => b.textContent === 'Connect Gemini')",
+    );
     await window.webContents.executeJavaScript(
       "document.getElementById('lock').click()",
     );
@@ -190,7 +193,7 @@ async function start() {
     if (!isolated)
       throw new Error("Desktop isolation or token removal failed.");
     console.log(
-      "Desktop smoke passed: SQLite, HTTP startup, automatic unlock, lock/reopen, three sources, Verify all models button, isolated renderer, removed token fragment.",
+      "Desktop smoke passed: SQLite, HTTP startup, automatic unlock, lock/reopen, three sources, Connect Gemini and Verify all models buttons, isolated renderer, removed token fragment.",
     );
     app.quit();
   }

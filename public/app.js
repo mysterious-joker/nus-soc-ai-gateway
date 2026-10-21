@@ -200,6 +200,9 @@ async function refresh() {
       timer = setTimeout(
         refresh,
         dashboard?.refreshing ||
+          ["preparing", "checking", "waiting", "verifying"].includes(
+            dashboard?.geminiSetup?.status,
+          ) ||
           ["running", "cancelling"].includes(dashboard?.verification?.status) ||
           !dashboard?.initialized ||
           Object.values(dashboard?.flows || {}).some((f) =>
@@ -406,8 +409,8 @@ function renderSetup() {
       { class: "muted small" },
       tools.gemini.supported
         ? tools.gemini.installed
-          ? "Gemini: Antigravity CLI detected. Sign in with your school subscription in agy, then connect the session below."
-          : "Gemini: install the official Antigravity CLI and sign in with your school subscription, then return here."
+          ? "Gemini: connection tool detected. Connect Gemini below to reuse your school login or open sign-in."
+          : "Gemini: Connect Gemini below downloads and verifies the connection tool, then guides you through school sign-in."
         : "Gemini CLI integration is not yet enabled on Windows. ChatGPT and SoCLaaS remain available.",
     ),
     el(
@@ -557,6 +560,13 @@ function renderSources() {
         );
       connection.append(form);
     } else if (source.provider === "gemini") {
+      const setup = dashboard.geminiSetup;
+      const settingUp = [
+        "preparing",
+        "checking",
+        "waiting",
+        "verifying",
+      ].includes(setup?.status);
       for (const account of source.accounts)
         connection.append(el("p", {}, `${account.email} · ${account.project}`));
       connection.append(
@@ -565,29 +575,40 @@ function renderSources() {
           { class: "muted small" },
           source.status === "connected"
             ? "Text chat through your school CLI subscription. Tool execution is disabled."
-            : "Sign in with agy using your school subscription, then connect here. Text chat only; tool execution is disabled.",
+            : "Connect with your school subscription. We prepare the tool and reuse your saved login, or open Google sign-in in a terminal. Text chat only.",
         ),
       );
       const actions = el(
         "div",
         { class: "actions" },
         button(
-          source.status === "disconnected"
-            ? "Connect CLI session"
-            : "Reconnect CLI session",
+          settingUp
+            ? "Connecting…"
+            : source.status === "disconnected"
+              ? "Connect Gemini"
+              : "Reconnect Gemini",
           async () => {
-            await api("/api/providers/gemini/cli", { method: "POST" });
+            await api("/api/providers/gemini/setup", { method: "POST" });
             await refresh();
-            toast("Gemini CLI session connected");
           },
           {
             disabled:
-              dashboard.tools &&
-              (!dashboard.tools.gemini.installed ||
-                !dashboard.tools.gemini.supported),
+              settingUp ||
+              (dashboard.tools && !dashboard.tools.gemini.supported),
           },
         ),
       );
+      if (settingUp)
+        actions.append(
+          button(
+            "Cancel setup",
+            async () => {
+              await api("/api/providers/gemini/setup", { method: "DELETE" });
+              await refresh();
+            },
+            { class: "quiet" },
+          ),
+        );
       if (source.status !== "disconnected")
         actions.append(
           button(
@@ -600,6 +621,17 @@ function renderSources() {
           ),
         );
       connection.append(actions);
+      if (setup?.message)
+        connection.append(
+          el(
+            "p",
+            {
+              class: setup.status === "error" ? "notice" : "muted small",
+              role: "status",
+            },
+            setup.message,
+          ),
+        );
     } else {
       for (const account of source.accounts)
         connection.append(

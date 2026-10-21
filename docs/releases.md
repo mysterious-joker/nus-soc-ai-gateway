@@ -30,6 +30,6 @@ Mac builds are not Developer ID signed or notarized; Windows installers are unsi
 
 ## Updating connection tools
 
-CLIProxyAPI release names, version and SHA-256 digests live in lib/tools.js. Obtain upstream digests, inspect binary/license layout, update the manifest and tests, and test a real download. The installer does not execute remote shell scripts or extract arbitrary archive paths. Antigravity remains a separate official installation.
+CLIProxyAPI release names, version and SHA-256 digests live in lib/tools.js. Obtain upstream digests, inspect binary/license layout, update the manifest and tests, and test a real download. The installer does not execute remote shell scripts or extract arbitrary archive paths. Antigravity CLI release URLs and SHA-512 digests live in lib/gemini-tool.js and come from the manifests referenced by Google’s official installer. The gateway downloads its executable directly without running a remote install script. scripts/check-tools.js checks its archive and executable startup on supported desktop build targets. Google’s CLI may self-update after installation.
 
 Review npm audit and compatibility notes when updating dependencies. The desktop Gemini deny hook uses Electron's bundled Node runtime via ELECTRON_RUN_AS_NODE; disabling that fuse requires replacing and re-verifying the hook runtime.

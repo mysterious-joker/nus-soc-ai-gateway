@@ -42,9 +42,15 @@ Tools are detected in this order: explicit CPA_BIN, managed download, PATH, comm
 
 ### Gemini Enterprise
 
-Install [Antigravity CLI using Google's guide](https://antigravity.google/docs/getting-started?tab=cli). Run `agy`, sign in with your `@comp.nus.edu.sg` account, and select the school subscription project made available to you. Confirm `agy models` works, return to the gateway, choose **Check again**, then **Connect CLI session**. A Gemini website login alone does not establish this CLI session.
+Choose **Connect Gemini** in Sources. The gateway reuses an installed Antigravity CLI or downloads Google’s official **1.4.4** build into its private data folder, verifies its SHA-512 digest, then checks for an existing school login. No Homebrew, shell command, Google Cloud OAuth client or developer API key is needed.
 
-The connector was checked with CLI 1.4.2 and depends on its structured output, identity diagnostics and execution hooks. It detects AGY_BIN, PATH and ~/.local/bin/agy. Provider updates can require adapter changes.
+If sign-in is needed, a terminal opens automatically. Complete the CLI’s first-run prompts, sign in with your **@comp.nus.edu.sg** account, and select your institutional subscription. Google may open your browser for authentication. Keep the dashboard open: it verifies the resulting session, discovers models and connects automatically. Once connected, close the sign-in terminal. An existing valid school session connects without this window. A Gemini website login alone does not establish CLI access.
+
+**Cancel setup** stops the gateway from waiting or connecting; close the external sign-in window too. It does not revoke Google consent or log out the shared CLI session. Setup times out after ten minutes of waiting. If the CLI is signed into another account, use its `/logout` command, sign in with your school account and retry. Google and your institution must have enabled the CLI subscription; this flow cannot grant that entitlement.
+
+Linux guided login needs a graphical session and a supported terminal (`x-terminal-emulator`, GNOME Terminal, Konsole or xterm). For a headless machine or a manually managed installation, follow [Google’s CLI setup guide](https://antigravity.google/docs/getting-started?tab=cli), sign in on that machine, then choose **Connect Gemini** to reuse the session.
+
+The inference connector was checked with CLI 1.4.2; managed 1.4.4 download, executable startup, saved-login connection and model discovery were also checked on Apple Silicon. Fresh Google consent is interactive and covered with synthetic login tests, not a new real-account consent run. Detection checks AGY_BIN, the managed download, PATH and common installation locations, including ~/.local/bin/agy. Invalid explicit overrides fail closed. The initial managed download is pinned; Google’s CLI can subsequently update itself. Provider updates can require adapter changes.
 
 The gateway pins the reported email and project before sending prompts, rejects API-key/ADC overrides, uses an isolated workspace and requires deny-all tool execution hooks. It does not extract keyring credentials. Changing the CLI account/project requires reconnecting in Sources. Disconnecting the gateway leaves the independent CLI login intact.
 
