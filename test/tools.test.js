@@ -59,10 +59,13 @@ test("archive extraction accepts only the expected regular binary and license", 
   const dir = temporary(t);
   const output = path.join(dir, "out");
   fs.mkdirSync(output);
-  fs.writeFileSync(path.join(dir, "cliproxyapi"), "binary");
+  fs.writeFileSync(path.join(dir, "cli-proxy-api"), "binary");
   fs.writeFileSync(path.join(dir, "unexpected.js"), "malicious");
   const file = path.join(dir, "download.tar.gz");
-  await tar.c({ gzip: true, file, cwd: dir }, ["cliproxyapi", "unexpected.js"]);
+  await tar.c({ gzip: true, file, cwd: dir }, [
+    "cli-proxy-api",
+    "unexpected.js",
+  ]);
   await extractArchive(file, output, "cliproxyapi");
   assert.deepEqual(fs.readdirSync(output), ["cliproxyapi"]);
   assert.equal(
@@ -77,9 +80,9 @@ test(
     const dir = temporary(t);
     const output = path.join(dir, "out");
     fs.mkdirSync(output);
-    fs.symlinkSync("/bin/sh", path.join(dir, "cliproxyapi"));
+    fs.symlinkSync("/bin/sh", path.join(dir, "cli-proxy-api"));
     const file = path.join(dir, "download.tar.gz");
-    await tar.c({ gzip: true, file, cwd: dir }, ["cliproxyapi"]);
+    await tar.c({ gzip: true, file, cwd: dir }, ["cli-proxy-api"]);
     await assert.rejects(
       extractArchive(file, output, "cliproxyapi"),
       /expected executable/,
