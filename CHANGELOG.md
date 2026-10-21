@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.2 — 2026-10-21
+
+- Show all detected models in the dashboard by default, including untested and unavailable entries with their status.
+- Add a direct Verify action for untested, supported models and distinguish detected counts from verified app access.
+- Preserve the requirement for successful endpoint checks before exposing models to app API keys.
+
 ## 2.1.1 — 2026-10-21
 
 - Fix reopening a locked dashboard from a token link without a full page reload.

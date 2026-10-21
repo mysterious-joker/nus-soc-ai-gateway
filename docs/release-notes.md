@@ -1,4 +1,12 @@
-Desktop setup for NUS SoC AI Gateway: download, open, connect a source, test a model, and copy the connection details into your app.
+This update fixes the model catalog hiding detected but untested models by default.
+
+- The dashboard now shows all detected models with their verification and availability status.
+- Use **Verify** beside a supported, untested model to open it directly in the Playground.
+- App API keys still receive only successfully verified model endpoints. Discovery alone does not enable inference.
+
+Install this update over your existing desktop app to retain its connections and usage history.
+
+Desktop features:
 
 - Native installers for Apple Silicon/Intel Macs, Windows x64 and Linux x64. Desktop users do not need Node, npm or Homebrew.
 - Automatic service startup and dashboard unlock; private persistent data and controlled external sign-in links.

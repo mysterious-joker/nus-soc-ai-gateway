@@ -827,7 +827,7 @@ function renderModels() {
       `${m.name} ${m.id}`.toLowerCase().includes(search),
   );
   $("catalog-summary").textContent =
-    `${dashboard.models.filter((m) => m.available).length} usable · ${dashboard.models.filter((m) => !m.available).length} excluded or awaiting verification · ${models.length} shown. Only endpoints with successful checks are exposed to apps. Counts include aliases and reasoning variants.`;
+    `${dashboard.models.length} detected · ${dashboard.models.filter((m) => m.available).length} verified and usable · ${models.length} shown. Apps receive only endpoints with successful request checks. Counts include aliases and reasoning variants.`;
   $("coverage-list").replaceChildren(
     makeTable(
       [["Capability"], ["Discovered"], ["Latest request passed"]],
@@ -874,7 +874,7 @@ function renderModels() {
         }),
       );
       if (
-        model.available &&
+        model.routable &&
         [
           "llm",
           "embedding",
@@ -885,15 +885,19 @@ function renderModels() {
       )
         actions.append(
           button(
-            "Try",
+            model.available ? "Try" : "Verify",
             async () => {
+              $("verify-model").checked = !model.available;
+              renderPlayground();
               switchView("playground");
               $("playground-model").value = model.id;
               $("media-file").value = "";
               updateExample();
               $("prompt").focus();
             },
-            { "aria-label": `Try ${model.id}` },
+            {
+              "aria-label": `${model.available ? "Try" : "Verify"} ${model.id}`,
+            },
           ),
         );
       return el(
