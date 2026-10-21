@@ -155,6 +155,8 @@ function lockView() {
   clearMedia();
   $("media-file").value = "";
   $("key-list").replaceChildren();
+  $("verification-results").replaceChildren();
+  $("verification-report").hidden = true;
   $("response-output").textContent =
     "Choose a model and send your first request.";
 }
@@ -198,6 +200,7 @@ async function refresh() {
       timer = setTimeout(
         refresh,
         dashboard?.refreshing ||
+          ["running", "cancelling"].includes(dashboard?.verification?.status) ||
           !dashboard?.initialized ||
           Object.values(dashboard?.flows || {}).some((f) =>
             ["waiting", "verifying"].includes(f.status),
@@ -228,11 +231,78 @@ function render() {
   )
     renderSources();
   renderModels();
+  renderVerification();
   renderUsage();
   renderKeys();
   renderPlayground();
   if (dashboard.notices?.length && !$("notice").textContent)
     notice(dashboard.notices.join("\n"));
+}
+function renderVerification() {
+  const job = dashboard?.verification;
+  const running = ["running", "cancelling"].includes(job?.status);
+  $("verify-all").disabled =
+    running ||
+    !dashboard?.initialized ||
+    !dashboard.models.some((model) => model.routable);
+  $("cancel-verification").hidden = !running;
+  $("cancel-verification").disabled = job?.status === "cancelling";
+  $("verification-report").hidden = !job;
+  if (!job) return;
+  const count = (status) =>
+    job.results.filter((item) => item.status === status).length;
+  const done = job.results.length - count("pending") - count("running");
+  const active = job.results.find((item) => item.status === "running");
+  const state =
+    job.status === "completed"
+      ? "Finished"
+      : job.status === "cancelled"
+        ? "Cancelled"
+        : "Verifying";
+  $("verification-status").textContent =
+    `${state}: ${done}/${job.results.length} checks · ${count("passed")} passed · ${count("failed")} failed · ${count("skipped")} skipped · ${count("cancelled")} cancelled${active ? ` — ${active.model} ${active.endpoint}` : ""}`;
+  $("verification-progress").max = job.results.length || 1;
+  $("verification-progress").value = done;
+  $("verification-results").replaceChildren(
+    el(
+      "table",
+      {},
+      el(
+        "thead",
+        {},
+        el(
+          "tr",
+          {},
+          ...["Model / source", "Endpoint", "Result", "Details"].map((text) =>
+            el("th", { scope: "col" }, text),
+          ),
+        ),
+      ),
+      el(
+        "tbody",
+        {},
+        ...job.results.map((item) =>
+          el(
+            "tr",
+            {},
+            el(
+              "td",
+              {},
+              item.model,
+              el(
+                "div",
+                { class: "muted small" },
+                NAMES[item.provider] || item.provider,
+              ),
+            ),
+            el("td", {}, item.endpoint || "—"),
+            el("td", {}, item.status),
+            el("td", {}, item.message || "Waiting"),
+          ),
+        ),
+      ),
+    ),
+  );
 }
 function renderSetup() {
   const connected = dashboard.sources.some(
@@ -1267,6 +1337,22 @@ $("playground-model").addEventListener("change", () => {
 $("media-file").addEventListener("change", updateExample);
 $("verify-model").addEventListener("change", renderPlayground);
 $("test-discovered").addEventListener("click", openVerification);
+for (const [id, method] of [
+  ["verify-all", "POST"],
+  ["cancel-verification", "DELETE"],
+]) {
+  $(id).addEventListener("click", async () => {
+    await action(
+      $(id),
+      async () => {
+        await api("/api/verification", { method });
+        await refresh();
+      },
+      method === "POST" ? "Preparing checks…" : "Cancelling…",
+    );
+    if (dashboard) renderVerification();
+  });
+}
 $("playground-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const btn = event.submitter;

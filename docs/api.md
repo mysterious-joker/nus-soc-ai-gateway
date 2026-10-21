@@ -78,3 +78,5 @@ Errors use `{ "error": { "message": "...", "type": "..." } }`. Common statuses: 
 There are at most 16 active gateway requests/sessions and one Gemini inference request. HTTP inference generally times out after two minutes, images after five minutes, and speech generation after 60 seconds following initialization. JSON bodies are limited to 2 MiB and ordinary upstream responses to 64 MiB.
 
 Dashboard `/api/*` routes require a dashboard cookie, plus CSRF for mutations. `/api/verify` is the privileged candidate-testing path. App keys cannot bypass verification.
+
+The dashboard's **Verify all models** button starts a sequential batch with `POST /api/verification` (no body, HTTP 202). `GET /api/dashboard` includes `verification` progress and per-model endpoint results; `DELETE /api/verification` cancels it. These are dashboard administration routes, unavailable to app API keys. A second start returns 409 while a batch is active. The batch uses the same `/api/verify` authentication, quota guards, output validation and usage logging as an individual check. See [probe behavior and limits](verification.md#one-click-full-verification).

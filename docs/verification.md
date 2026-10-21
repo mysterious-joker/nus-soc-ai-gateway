@@ -13,9 +13,31 @@ ChatGPT uses its authenticated Codex account catalog, the bridge model registry 
 
 Catalog refreshes coalesce, cache for one minute and run periodically every five minutes. Failed refreshes preserve visible metadata as stale and prevent routing. Checks belong to the connected account/credential; switching identity does not inherit another account's passes. Verification has no age-based expiry yet; timestamps and subsequent request failures determine its current evidence. An endpoint that fails a recorded request can require re-verification.
 
-## Verify selected access first
+## One-click full verification
 
-Start the gateway and connect a source. Enable **Show excluded and untested entries** in Models to copy a candidate's exact ID. Test one candidate before testing the entire catalog:
+Open **Models → Verify all models**. No prompt, uploads or app key are needed. The gateway refreshes discovery and checks all detected models' supported endpoints, including models hidden by your current filters and previously verified models. It sends one request at a time, with no automatic retries. Unsupported or stale entries are reported as skipped.
+
+The progress display reports each model and endpoint as passed, failed, skipped or cancelled. Successful checks immediately become available to apps. The batch continues if you change tabs or reload the dashboard; keep the gateway running. **Cancel verification**, locking the dashboard or quitting the app stops it. Cancelling an in-flight request cannot refund allowance already consumed. Source changes are blocked during a batch; cancel first.
+
+Minimal probes:
+
+| Capability                   | Request                                                                                                                                                                                                                                             |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Chat and Responses           | `Reply OK.`; one request per endpoint. SoCLaaS requests cap output at 32 tokens. ChatGPT uses the lowest advertised reasoning level; its CLI bridge strips token caps. Gemini CLI rejects token caps and retains each discovered reasoning variant. |
+| Embeddings                   | The text `OK`.                                                                                                                                                                                                                                      |
+| Image generation and editing | One low-quality 1024 × 1024 image per endpoint, a short prompt and a bundled 32 × 32 edit input. This is a compatibility baseline, not a universal minimum size.                                                                                    |
+| Speech recognition           | A bundled short, mono 16 kHz recording of synthetic “OK”.                                                                                                                                                                                           |
+| Speech and realtime audio    | Speak `OK` once. Speech generates audio over the realtime WebSocket and verifies both routes; the results identify this shared check. It does not exercise microphone input or the public WebSocket relay.                                          |
+
+These are real inference requests and consume the source's allowance. Actual token counts remain in **Usage**; some services do not report them. CLI-controlled reasoning, system prompts and media generation can exceed the visible prompt's token count. No separately billed API fallback is added.
+
+HTTP 401, 402, 429 or 503 pauses the remaining checks for that source; other sources continue. Other failed requests are reported individually. A failed small probe can reflect a temporary error, unsupported probe options or too little output budget, rather than subscription exclusion. Try that endpoint in the Playground with appropriate input if needed. Skipped checks do not erase prior verification; a recorded failed request can disable that endpoint until a successful retest.
+
+Batch progress is held in memory until the next run or restart; endpoint checks and usage remain in the local database. Generated test outputs are discarded. The batch starts only when requested, never at startup or in CI. Automated tests use synthetic providers.
+
+## Verify selected access
+
+Start the gateway and connect a source. Models shows untested entries by default. Use **Verify** beside a model to open it in the Playground, or copy its exact ID for a targeted command-line check:
 
 ```sh
 node scripts/verify-models.js --live --provider chatgpt --model 'chatgpt/ID_FROM_DASHBOARD'

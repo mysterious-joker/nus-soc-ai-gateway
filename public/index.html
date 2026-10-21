@@ -203,7 +203,42 @@
               </div>
             </div>
             <div class="button-row">
+              <button
+                id="verify-all"
+                class="primary"
+                aria-describedby="verification-help"
+              >
+                Verify all models
+              </button>
               <button id="test-discovered">Test a discovered model</button>
+              <button id="cancel-verification" hidden>
+                Cancel verification
+              </button>
+            </div>
+            <p id="verification-help" class="small muted">
+              Checks all detected models and supported endpoints, regardless of
+              filters. Uses short prompts and tiny inputs; image and audio
+              checks also consume allowance. CLI services control their own
+              token limits. No automatic retries.
+            </p>
+            <div id="verification-report" hidden>
+              <p id="verification-status" role="status" aria-live="polite"></p>
+              <progress
+                id="verification-progress"
+                aria-label="Model verification progress"
+                max="1"
+                value="0"
+              ></progress>
+              <details class="request-details">
+                <summary>Verification results</summary>
+                <p class="small muted">
+                  Successful checks enable their endpoints for apps. A failed
+                  minimal request can also mean a temporary error or
+                  insufficient output budget; it does not prove the model is
+                  excluded from your subscription. Token counts appear in Usage.
+                </p>
+                <div id="verification-results" class="table-scroll"></div>
+              </details>
             </div>
             <div class="filters">
               <div class="search">

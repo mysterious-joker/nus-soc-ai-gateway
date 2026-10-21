@@ -75,6 +75,37 @@ button:disabled {
   background: #c4d9ff;
   border-color: #c4d9ff;
 }
+#verification-progress {
+  width: 100%;
+  height: 8px;
+  accent-color: var(--accent);
+}
+#verification-status {
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+#verification-results td {
+  overflow-wrap: anywhere;
+}
+#verification-results table {
+  min-width: 680px;
+}
+#verification-results td:nth-child(3) {
+  white-space: nowrap;
+}
+#verification-help {
+  margin: 12px 0;
+}
+#verification-report {
+  margin-bottom: 24px;
+}
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
 .quiet {
   background: transparent;
 }
