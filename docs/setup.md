@@ -4,12 +4,12 @@
 
 Download from [GitHub Releases](https://github.com/mysterious-joker/nus-soc-ai-gateway/releases/latest). Each release includes SHA256SUMS.txt to check download integrity.
 
-| Computer          | Download                   | Install                                                                  |
-| ----------------- | -------------------------- | ------------------------------------------------------------------------ |
-| Apple Silicon Mac | mac-arm64.dmg              | Drag the app to Applications and open it.                                |
-| Intel Mac         | mac-x64.dmg                | Drag the app to Applications and open it.                                |
-| Windows x64       | win-x64.exe                | Run the per-user installer; no administrator access required.            |
-| Linux x64         | linux-x64.AppImage or .deb | Make the AppImage executable and open it, or install the Debian package. |
+| Computer          | Download                                 | Install                                                                  |
+| ----------------- | ---------------------------------------- | ------------------------------------------------------------------------ |
+| Apple Silicon Mac | mac-arm64.dmg                            | Drag the app to Applications and open it.                                |
+| Intel Mac         | mac-x64.dmg                              | Drag the app to Applications and open it.                                |
+| Windows x64       | win-x64.exe                              | Run the per-user installer; no administrator access required.            |
+| Linux x64         | linux-x86_64.AppImage or linux-amd64.deb | Make the AppImage executable and open it, or install the Debian package. |
 
 These first desktop builds are **unsigned and not notarized**. macOS and Windows may warn about an unidentified publisher. Use your operating system's supported per-app approval flow only if you trust this repository and release. Do not disable system-wide protection. Managed school devices may require administrator approval; running from source remains an alternative.
 
