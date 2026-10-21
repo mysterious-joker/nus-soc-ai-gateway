@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.2.1 — 2026-10-21
+
+- Fix invalid Mac bundle signatures that caused the downloaded app to be reported as damaged. Apply ad-hoc signing after packaging; Developer ID signing and notarization remain unavailable.
+- Verify signature integrity and launch the actual app inside each Mac DMG in CI before publishing.
+- Check that the Models tab exposes **Verify all models** in desktop smoke tests.
+- Document replacing old Mac builds and quitting older running instances before opening an update.
+
 ## 2.2.0 — 2026-10-21
 
 - Add **Verify all models** to check every detected model's supported endpoints in one click, with progress, per-endpoint results and cancellation.

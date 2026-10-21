@@ -11,7 +11,9 @@ Download from [GitHub Releases](https://github.com/mysterious-joker/nus-soc-ai-g
 | Windows x64       | win-x64.exe                              | Run the per-user installer; no administrator access required.            |
 | Linux x64         | linux-x86_64.AppImage or linux-amd64.deb | Make the AppImage executable and open it, or install the Debian package. |
 
-These first desktop builds are **unsigned and not notarized**. macOS and Windows may warn about an unidentified publisher. Use your operating system's supported per-app approval flow only if you trust this repository and release. Do not disable system-wide protection. Managed school devices may require administrator approval; running from source remains an alternative.
+Mac builds from **2.2.1** have valid ad-hoc signatures, but are **not Developer ID signed or notarized**. Windows installers are unsigned. macOS and Windows may warn about an unidentified publisher. Use your operating system's supported per-app approval flow only if you trust this repository and release. Do not disable system-wide protection. Managed school devices may require administrator approval; running from source remains an alternative.
+
+Mac releases through 2.2.0 skipped bundle signing and can show a **“damaged”** warning because their packaged signature is invalid. Replace these with 2.2.1 or newer; do not bypass that warning on the old build. Quit all existing gateway instances before opening the installed app in Applications. The single-instance lock can otherwise bring an older copy to the foreground. Your connections and usage remain in the app's separate local data folder.
 
 Desktop users do not need Node, npm, Git or Homebrew. Open the app to start the service and unlock the dashboard. Closing the window or choosing Quit stops its gateway and bridge. Reopen it to resume. The Gateway menu opens the dashboard, API reference and local data folder; Help links to updates and support. Updates are manual: download and install the new release. There is no background updater or telemetry.
 

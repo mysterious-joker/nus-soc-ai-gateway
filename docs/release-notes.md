@@ -1,4 +1,8 @@
-Verify all detected models with one button: **Models → Verify all models**.
+This update fixes Mac installers that macOS reported as **damaged** because bundle signing was skipped. Version 2.2.1 applies a valid ad-hoc signature and verifies both signature integrity and dashboard startup from the actual DMG before publishing.
+
+Quit older gateway instances, replace the app in Applications, then open it. Existing connections and usage are kept. The app is still not Developer ID signed or notarized; macOS may require its normal per-app approval for an unidentified developer.
+
+The one-click feature remains in **Models → Verify all models**:
 
 - Checks every supported model/endpoint with short prompts and bundled tiny audio/image inputs. No prompt or file upload is needed.
 - Shows progress and individual results; supports cancellation and dashboard reloads. Unsupported or stale models are reported as skipped.
@@ -18,6 +22,6 @@ Desktop features:
 - Guided setup, in-dashboard endpoint verification, app-key instructions and an OpenAPI-backed API reference.
 - Cross-platform builds and synthetic startup checks, preserving authentication and quota protections.
 
-**Installation notes:** these first desktop builds are unsigned and macOS builds are not notarized. Gemini requires a separate Antigravity CLI installation and enabled school subscription; its integration is not enabled on Windows. The complete live subscription workflow has been checked on Apple Silicon macOS. Build checks do not verify institutional entitlements on other systems.
+**Installation notes:** Mac apps use ad-hoc signatures and are not notarized; Windows installers are unsigned. Gemini requires a separate Antigravity CLI installation and enabled school subscription; its integration is not enabled on Windows. The complete live subscription workflow has been checked on Apple Silicon macOS. Build checks do not verify institutional entitlements on other systems.
 
 See the [setup guide](https://github.com/mysterious-joker/nus-soc-ai-gateway/blob/main/docs/setup.md) for installation, migration and troubleshooting. Download your architecture and use SHA256SUMS.txt to verify files. Existing browser-only installations still work with npm start and npm run open.

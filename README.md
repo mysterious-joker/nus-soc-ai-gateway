@@ -54,7 +54,7 @@ Download your installer from [GitHub Releases](https://github.com/mysterious-jok
 2. **Verify access.** Open **Models → Verify all models** to check every detected model's supported endpoints using minimal prompts and bundled media inputs. Watch progress or cancel at any time. This consumes provider allowance; only successful model/endpoint checks become available to apps. Use **Verify** beside one model for a targeted Playground check. See [verification details](docs/verification.md) for token limits and probe coverage.
 3. **Connect your app.** Create an app key in Sources, copy the displayed API base URL, and choose a verified model in your OpenAI-compatible client. Keep the gateway open while using it.
 
-The complete live subscription workflow has been checked on macOS. Builds and synthetic startup checks cover released platforms; they do not prove institutional access on every OS. **Gemini CLI integration is not enabled on Windows.** The first desktop release is unsigned and not notarized; see [installation and platform notes](docs/setup.md).
+The complete live subscription workflow has been checked on macOS. Builds and synthetic startup checks cover released platforms; they do not prove institutional access on every OS. **Gemini CLI integration is not enabled on Windows.** Mac builds have ad-hoc signatures but are not notarized; Windows installers are unsigned. See [installation and platform notes](docs/setup.md).
 
 ### Run from source
 

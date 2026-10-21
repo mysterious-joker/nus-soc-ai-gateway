@@ -24,7 +24,9 @@ Core CI checks Node 22 and 24. Desktop CI runs tests and startup checks on Windo
 
 Update package.json, package-lock.json, CHANGELOG.md and docs/release-notes.md; push commits and wait for checks; then push a matching vX.Y.Z tag. The desktop workflow rebuilds all platforms and publishes only after the entire matrix succeeds. Releases include SHA256SUMS.txt. Actions are pinned to commit hashes; only the release job has repository write permission.
 
-Version 2.1.1 installers are unsigned and macOS builds are not notarized. Signing certificates and real institutional accounts are unavailable in CI. Do not describe build/startup checks as live subscription verification. Signing should be configured through protected CI secrets in a later release.
+Mac builds from 2.2.1 use ad-hoc signing (`mac.identity: "-"`). Setting the identity to `null` skips signing after packaging and can leave an invalid Electron signature. CI mounts each resulting DMG, verifies the contained app with `codesign --verify --deep --strict`, and starts that packaged app with an isolated smoke-test profile before uploading installers. The smoke test checks the Models verification button as well as startup and authentication.
+
+Mac builds are not Developer ID signed or notarized; Windows installers are unsigned. Signing certificates and real institutional accounts are unavailable in CI. Do not describe build/startup checks as live subscription verification. Developer ID signing and notarization should be configured through protected CI secrets in a later release.
 
 ## Updating connection tools
 
