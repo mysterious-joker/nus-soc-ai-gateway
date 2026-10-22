@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.3.2 — 2026-10-22
+
+- Extend ChatGPT Chat Completions and Responses to a bounded 600-second total deadline, including streamed output. Clients should allow at least 630 seconds.
+- Align HTTP header/body transport deadlines and built-in verification clients so they do not cut off long requests prematurely.
+- Preserve disconnect cancellation, failure accounting and existing limits for other providers and media. No automatic retries are added.
+- Add regressions for delayed completion, exact deadline enforcement, partial-stream timeouts, disconnects and multipart upload compatibility.
+
 ## 2.3.1 — 2026-10-22
 
 - Reject empty or whitespace-only Gemini results instead of returning a successful completion.
