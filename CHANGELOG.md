@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.3.1 — 2026-10-22
+
+- Reject empty or whitespace-only Gemini results instead of returning a successful completion.
+- Allow 300 seconds for Gemini CLI generation and 315 seconds for its wrapper; full verification and smoke clients allow 330 seconds.
+- Return safe machine-readable empty-response, timeout and upstream-failure codes. Streaming failures never emit a successful completion, and the usage ledger records the failure.
+- Add regressions for blank output, partial-stream failure, diagnostic redaction and exact deadline enforcement.
+
 ## 2.3.0 — 2026-10-22
 
 - Added **Connect Gemini**: prepares a checksum-verified official CLI when needed, reuses a saved school session, or opens guided sign-in and connects automatically.

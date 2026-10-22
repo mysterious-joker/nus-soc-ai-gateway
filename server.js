@@ -473,6 +473,9 @@ function createGateway(options = {}) {
               : "An unexpected gateway error occurred. Try again.",
             type:
               error.status === 401 ? "authentication_error" : "gateway_error",
+            ...(error instanceof HttpError && error.code
+              ? { code: error.code }
+              : {}),
           },
         });
       else if (!res.destroyed) res.end();

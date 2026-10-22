@@ -27,7 +27,7 @@ async function request(route, options = {}) {
   return fetch(base + route, {
     ...options,
     redirect: "error",
-    signal: AbortSignal.timeout(310_000),
+    signal: AbortSignal.timeout(330_000),
   });
 }
 async function main() {

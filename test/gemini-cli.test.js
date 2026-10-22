@@ -80,9 +80,15 @@ let input='';process.stdin.on('data',c=>input+=c);process.stdin.on('end',()=>{
  fs.writeFileSync(${JSON.stringify(path.join(dir, "prompt-received"))},'yes');
  if(${JSON.stringify(mode)}==='hang') {setInterval(()=>{},1000);return;}
  if(${JSON.stringify(mode)}!=='no-hook') fs.writeFileSync(process.env.NUS_GATEWAY_HOOK_READY,'ready');
+ if(['empty','blank','timeout','failure'].includes(${JSON.stringify(mode)})) {
+   if(${JSON.stringify(mode)}==='timeout') process.stderr.write('context deadline exceeded: secret-credential');
+   console.log(JSON.stringify({event:'result',result:{status:${JSON.stringify(mode)}==='failure'?'FAILED':'SUCCESS',response:${JSON.stringify(mode)}==='blank'?'  \\n':'',error:'secret-credential'}}));
+   return;
+ }
  console.log(JSON.stringify({event:'step_update',step_update:{step_type:'agent_response',text_delta:'你好'}}));
  console.log(JSON.stringify({event:'result',result:{status:'SUCCESS',response:'你好',usage:{input_tokens:7,output_tokens:2,total_tokens:9}}}));
 });
+
 `,
     { mode: 0o700 },
   );
@@ -165,11 +171,23 @@ test("Gemini routes chat and Responses streaming through the adapter and records
     available: true,
   };
   let calls = 0;
+  let fault;
+  const observations = [];
   const gemini = {
     stop() {},
     async generate({ onText, body, endpoint }) {
       conversation(body, endpoint);
       calls++;
+      if (fault) {
+        if (fault.partial) onText("partial");
+        if (fault.timeout)
+          throw new (require("../lib/security").HttpError)(
+            504,
+            "Gemini CLI request timed out.",
+            "upstream_timeout",
+          );
+        return { response: "  \n" };
+      }
       onText("Hello ");
       onText("世界");
       return {
@@ -194,6 +212,7 @@ test("Gemini routes chat and Responses streaming through the adapter and records
       refresh: async () => {},
       list: () => [model],
       sources: () => [],
+      observeResult: (...args) => observations.push(args),
     },
     fetcher: () => {
       throw new Error("Gemini must not use Vertex or CLIProxyAPI");
@@ -237,4 +256,114 @@ test("Gemini routes chat and Responses streaming through the adapter and records
     }
   assert.equal(calls, 4);
   assert.equal(store.analytics().totals.tokens, 36);
+  for (const failure of [
+    { partial: false },
+    { partial: true },
+    { partial: true, timeout: true },
+  ]) {
+    fault = failure;
+    for (const stream of [false, true])
+      for (const endpoint of ["/v1/chat/completions", "/v1/responses"]) {
+        const r = await fetch(base + endpoint, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            model: model.id,
+            stream,
+            ...(endpoint.endsWith("responses")
+              ? { input: "Hi" }
+              : { messages: [{ role: "user", content: "Hi" }] }),
+          }),
+        });
+        const data = await r.text();
+        const status = failure.timeout ? 504 : 502;
+        assert.equal(r.status, stream && failure.partial ? 200 : status);
+        assert.match(
+          data,
+          failure.timeout ? /upstream_timeout/ : /empty_model_response/,
+        );
+        assert.doesNotMatch(
+          data,
+          /response.completed|\[DONE\]|"finish_reason":"stop"/,
+        );
+        assert.equal(observations.at(-1)[2], status);
+        assert.equal(observations.at(-1)[3], false);
+      }
+  }
+  assert.equal(store.analytics().totals.requests, 16);
+  assert.equal(store.analytics().totals.successful, 4);
+  assert.equal(
+    store.db
+      .prepare(
+        "SELECT COUNT(*) AS n FROM usage_logs WHERE status_code=504 AND error_message LIKE '%timed out%'",
+      )
+      .get().n,
+    4,
+  );
 });
+
+test(
+  "Gemini rejects blank success and distinguishes timeout from failure without diagnostic leakage",
+  { skip: process.platform === "win32" },
+  async (t) => {
+    for (const [mode, status, code] of [
+      ["empty", 502, "empty_model_response"],
+      ["blank", 502, "empty_model_response"],
+      ["timeout", 504, "upstream_timeout"],
+      ["failure", 502, "upstream_failed"],
+    ]) {
+      const { gemini } = fixture(t, mode);
+      await assert.rejects(generate(gemini), (error) => {
+        assert.equal(error.status, status);
+        assert.equal(error.code, code);
+        assert.doesNotMatch(error.message, /secret-credential/);
+        return true;
+      });
+    }
+  },
+);
+
+test(
+  "Gemini gives the CLI 300 seconds and kills a hung process at the 315-second boundary",
+  { skip: process.platform === "win32" },
+  async (t) => {
+    const { EventEmitter } = require("node:events");
+    const { PassThrough } = require("node:stream");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "gemini-deadline-"));
+    t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+    t.mock.timers.enable({ apis: ["setTimeout"] });
+    let killed = false,
+      settled = false;
+    const cli = createGeminiCli({
+      dataDir: dir,
+      store: { get: () => account },
+      binary: "fixture",
+      spawnProcess(file, args) {
+        assert.equal(args[args.indexOf("--print-timeout") + 1], "300s");
+        const child = new EventEmitter();
+        child.stdin = new PassThrough();
+        child.stdout = new PassThrough();
+        child.stderr = new PassThrough();
+        child.kill = () => {
+          killed = true;
+          queueMicrotask(() => child.emit("close", null, "SIGKILL"));
+        };
+        return child;
+      },
+    });
+    const request = generate(cli).finally(() => {
+      settled = true;
+    });
+    const rejected = assert.rejects(
+      request,
+      (e) => e.status === 504 && e.code === "upstream_timeout",
+    );
+    t.mock.timers.tick(314_999);
+    await Promise.resolve();
+    assert.equal(killed, false);
+    assert.equal(settled, false);
+    t.mock.timers.tick(1);
+    await rejected;
+    assert.equal(killed, true);
+  },
+);

@@ -1,16 +1,11 @@
-Gemini setup now starts with **Sources → Connect Gemini**.
+This update fixes Gemini requests that returned HTTP 200 with an empty answer.
 
-- Prepares Google’s official CLI automatically when missing, with a pinned SHA-512-verified download. No Homebrew or shell commands are required.
-- Reuses an existing school login immediately. Otherwise, opens a terminal for Google sign-in and first-run prompts, then connects and discovers models automatically.
-- Shows progress and supports cancellation. Exact `@comp.nus.edu.sg` checks, subscription-session authentication and tool restrictions remain enforced.
-- Keeps the one-click **Models → Verify all models** feature and existing connections, usage history and app keys.
+- Blank or whitespace-only CLI results now fail with `empty_model_response` (HTTP 502).
+- Gemini generation has a 300-second CLI deadline and a 315-second process deadline. Configure clients for at least 330 seconds.
+- Timeout and upstream failures have safe machine-readable codes. Raw CLI diagnostics are not returned or stored in the usage ledger.
+- If streaming has already started, failures appear as an error event or `response.failed`, without a successful completion. Inspect stream events even when HTTP status is 200.
+- The longer timeout does not guarantee that every workload finishes. Failed results remain failures and do not verify a model endpoint.
 
-Saved-login connection was checked through the dashboard on Apple Silicon using the managed CLI: 14 Gemini model entries were discovered without an inference request. New-account consent remains an interactive Google flow; its orchestration is covered by synthetic tests. Fifty regression tests pass locally. Release builds also check desktop startup, the connection controls, verified tool downloads and Mac DMG signatures/startup.
+Install over your existing app after quitting it. Connections, app keys and usage history are retained. Apple Silicon Mac users should download **nus-soc-ai-gateway-2.3.1-mac-arm64.dmg**.
 
-Install this update over the existing app, after quitting it, to retain your local data. For your Apple Silicon Mac, choose **nus-soc-ai-gateway-2.3.0-mac-arm64.dmg**. Other assets cover Intel Mac, Linux x64 and Windows x64.
-
-**Platform notes:** Guided Gemini setup supports macOS and Linux with a graphical terminal; Windows Gemini integration is not enabled. Your school account must have CLI subscription access. Fresh sign-in may require selecting the institutional subscription and completing first-run prompts. Cancel setup stops gateway auto-connection; close the external sign-in terminal separately. The gateway does not use a Google developer API key or Vertex fallback.
-
-Mac apps are ad-hoc signed but not notarized; Windows installers are unsigned. Managed devices may need administrator approval. No system-wide security changes are required. Version 2.2.1’s Mac signature fix is included.
-
-See the [setup guide](https://github.com/mysterious-joker/nus-soc-ai-gateway/blob/main/docs/setup.md) for sign-in, migration and troubleshooting. SHA256SUMS.txt contains installer checksums. Browser-only source installations remain supported.
+All existing platform limits remain: Gemini supports macOS/Linux, Mac apps are ad-hoc signed but not notarized, and Windows installers are unsigned. See the [API contract](https://github.com/mysterious-joker/nus-soc-ai-gateway/blob/main/docs/api.md) and [setup guide](https://github.com/mysterious-joker/nus-soc-ai-gateway/blob/main/docs/setup.md).
