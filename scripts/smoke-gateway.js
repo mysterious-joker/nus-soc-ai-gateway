@@ -1,3 +1,4 @@
+const { inferenceFetch } = require("../lib/inference-http");
 // Exercise the public client API; --live explicitly consumes subscription allowance.
 const fs = require("node:fs");
 const path = require("node:path");
@@ -24,10 +25,10 @@ function record(name, passed, details = {}) {
   );
 }
 async function request(route, options = {}) {
-  return fetch(base + route, {
+  return inferenceFetch(base + route, {
     ...options,
     redirect: "error",
-    signal: AbortSignal.timeout(330_000),
+    signal: AbortSignal.timeout(630_000),
   });
 }
 async function main() {

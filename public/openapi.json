@@ -111,7 +111,7 @@
       "post": {
         "operationId": "chatCompletion",
         "summary": "Chat with a model",
-        "description": "Choose a model that advertises this endpoint. Additional request fields are forwarded to ChatGPT/SoCLaaS and may be rejected upstream. Gemini accepts text only; it rejects tools, image/audio input, sampling controls and token limits. Inspect streamed errors even when HTTP status is 200. Gemini CLI generation is limited to 300 seconds, with a 315-second wrapper deadline. Set client timeouts to at least 330 seconds. Empty output fails with empty_model_response; deadlines fail with upstream_timeout.",
+        "description": "Choose a model that advertises this endpoint. Additional request fields are forwarded to ChatGPT/SoCLaaS and may be rejected upstream. Gemini accepts text only; it rejects tools, image/audio input, sampling controls and token limits. Inspect streamed errors even when HTTP status is 200. ChatGPT has a 600-second total deadline including streamed output; allow at least 630 seconds in clients. Client timeout settings do not extend the gateway deadline. Gemini CLI generation is limited to 300 seconds, with a 315-second wrapper deadline. Set client timeouts to at least 330 seconds. Empty output fails with empty_model_response; deadlines fail with upstream_timeout.",
         "tags": ["Common"],
         "x-providers": ["ChatGPT Edu", "Gemini Enterprise", "SoCLaaS"],
         "responses": {
@@ -210,7 +210,7 @@
       "post": {
         "operationId": "createResponse",
         "summary": "Generate a response",
-        "description": "Choose a model that advertises this endpoint. Additional request fields are forwarded to ChatGPT/SoCLaaS and may be rejected upstream. Gemini accepts text only; it rejects tools, image/audio input, sampling controls and token limits. Inspect streamed errors even when HTTP status is 200. Conversation persistence, response retrieval and deletion routes are not implemented. Gemini CLI generation is limited to 300 seconds, with a 315-second wrapper deadline. Set client timeouts to at least 330 seconds. Empty output fails with empty_model_response; deadlines fail with upstream_timeout.",
+        "description": "Choose a model that advertises this endpoint. Additional request fields are forwarded to ChatGPT/SoCLaaS and may be rejected upstream. Gemini accepts text only; it rejects tools, image/audio input, sampling controls and token limits. Inspect streamed errors even when HTTP status is 200. Conversation persistence, response retrieval and deletion routes are not implemented. ChatGPT has a 600-second total deadline including streamed output; allow at least 630 seconds in clients. Client timeout settings do not extend the gateway deadline. Gemini CLI generation is limited to 300 seconds, with a 315-second wrapper deadline. Set client timeouts to at least 330 seconds. Empty output fails with empty_model_response; deadlines fail with upstream_timeout.",
         "tags": ["Common"],
         "x-providers": ["ChatGPT Edu", "Gemini Enterprise", "SoCLaaS"],
         "responses": {

@@ -1,3 +1,4 @@
+const { inferenceFetch } = require("../lib/inference-http");
 // Explicit opt-in: this consumes included provider allowance. No test runs at startup.
 const fs = require("node:fs");
 const path = require("node:path");
@@ -166,13 +167,13 @@ async function main() {
         const start = Date.now();
         let result;
         try {
-          const r = await fetch(
+          const r = await inferenceFetch(
             base + "/api/verify?endpoint=" + encodeURIComponent(endpoint),
             {
               method: "POST",
               headers,
               body: body instanceof FormData ? body : JSON.stringify(body),
-              signal: AbortSignal.timeout(310_000),
+              signal: AbortSignal.timeout(630_000),
             },
           );
           if (model.type === "realtime-audio" && r.ok) {
