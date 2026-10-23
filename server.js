@@ -173,7 +173,9 @@ function createGateway(options = {}) {
     } finally {
       res.removeListener("close", disconnect);
       store.record(log);
-      catalog.observeResult(model, endpoint, log.status, log.status === 200);
+      catalog.observeResult(model, endpoint, log.status, log.status === 200, {
+        verification: allowUnverified,
+      });
     }
   }
   const server = http.createServer(async (req, res) => {

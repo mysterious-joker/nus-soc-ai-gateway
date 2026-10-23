@@ -291,3 +291,60 @@ test("candidate discovery, endpoint verification and included-only quota guards"
 test("upstream media response sizes are bounded", async () => {
   await assert.rejects(readResponse(new Response("12345"), 4), /exceeds/);
 });
+
+test("runtime transient failures preserve verified endpoints but verification failures revoke them", async (t) => {
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "gateway-transient-"));
+  const store = createStore(dataDir);
+  t.after(() => {
+    store.db.close();
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  });
+  const bridge = {
+    port: 8317,
+    key: "synthetic",
+    rawAccount: () => ({ access_token: "test" }),
+    accounts: () => [
+      { id: "one", provider: "chatgpt", email: "one@u.nus.edu" },
+    ],
+  };
+  const catalog = createCatalog({
+    bridge,
+    store,
+    fetcher: async (url) =>
+      Response.json(
+        url.includes("codex/models")
+          ? { models: [{ slug: "reasoner" }] }
+          : { data: [] },
+      ),
+  });
+  await catalog.refresh(true);
+  const model = catalog.list().find((m) => m.provider === "chatgpt");
+  assert.ok(model);
+  const endpoint = "/v1/chat/completions";
+  catalog.observeResult(model, endpoint, 200, true);
+  const passed = catalog.list().find((m) => m.id === model.id).verification;
+  for (const status of [408, 429, 500, 502, 503, 504]) {
+    catalog.observeResult(model, endpoint, status, false);
+    assert.deepEqual(
+      catalog.list().find((m) => m.id === model.id).verification,
+      passed,
+    );
+    await catalog.resolve(model.id, { endpoint });
+  }
+  catalog.observeResult(model, "/v1/responses", 504, false);
+  await assert.rejects(
+    catalog.resolve(model.id, { endpoint: "/v1/responses" }),
+    /not passed verification/,
+  );
+  catalog.observeResult(model, endpoint, 504, false, { verification: true });
+  await assert.rejects(
+    catalog.resolve(model.id, { endpoint }),
+    /not passed verification/,
+  );
+  catalog.observeResult(model, endpoint, 200, true);
+  catalog.observeResult(model, endpoint, 403, false);
+  await assert.rejects(
+    catalog.resolve(model.id, { endpoint }),
+    /not passed verification/,
+  );
+});
