@@ -9,6 +9,7 @@ function fixture(
     endpoint = "/v1/chat/completions",
     stream = false,
     provider = "chatgpt",
+    allowUnverified = false,
   } = {},
 ) {
   t.mock.timers.enable({ apis: ["setTimeout"] });
@@ -48,6 +49,7 @@ function fixture(
     req: {},
     res,
     endpoint,
+    allowUnverified,
     body: { model: model.id, stream },
     key: "synthetic-key",
     bridge: { port: 8317, key: "synthetic-bridge-key" },
@@ -152,6 +154,7 @@ for (const endpoint of ["/v1/chat/completions", "/v1/responses"]) {
     assert.equal(f.logs.length, 1);
     assert.equal(f.logs[0].status, 504);
     assert.equal(f.observations[0][3], false);
+    assert.deepEqual(f.observations[0][4], { verification: false });
     assert.equal(f.res.listenerCount("close"), 0);
   });
 }
@@ -190,4 +193,13 @@ test("SoCLaaS retains its existing 120s inference deadline", async (t) => {
   assert.equal(f.signal.aborted, false);
   t.mock.timers.tick(1);
   assert.equal((await f.result).status, 504);
+});
+
+test("explicit verification timeout is identified separately from runtime failure", async (t) => {
+  const f = fixture(t, { allowUnverified: true });
+  await f.ready;
+  t.mock.timers.tick(600_000);
+  assert.equal((await f.result).status, 504);
+  assert.equal(f.logs[0].status, 504);
+  assert.deepEqual(f.observations[0][4], { verification: true });
 });
